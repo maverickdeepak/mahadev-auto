@@ -8,12 +8,12 @@ const AboutSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-              About BikeFix Pro
+              About Mahadev Automobiles
             </h2>
             <p className="text-lg text-gray-600 mb-6">
-              Founded in 2008, BikeFix Pro has been serving the community with
-              exceptional bike repair and maintenance services. Our certified
-              mechanics have over 15 years of combined experience.
+              Founded in 2008, Mahadev Automobiles has been serving the
+              community with exceptional bike repair and maintenance services.
+              Our certified mechanics have over 15 years of combined experience.
             </p>
             <p className="text-lg text-gray-600 mb-8">
               We believe in quality workmanship, honest pricing, and building
