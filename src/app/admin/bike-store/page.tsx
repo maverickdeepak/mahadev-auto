@@ -1,6 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
+
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 import {
   Bike,
   User,
@@ -9,6 +18,8 @@ import {
   Save,
   Plus,
   Trash2,
+  Clock,
+  Search,
 } from "lucide-react";
 
 interface BikeServiceItem {
@@ -26,6 +37,9 @@ interface BikeRecord {
   serviceCost: number;
   serviceItems: BikeServiceItem[];
   totalCost: number;
+  serviceStartDate: string;
+  deliveryDate: string;
+  serviceStatus: string;
 }
 
 const BikeStorepage = () => {
@@ -38,10 +52,24 @@ const BikeStorepage = () => {
     serviceCost: 0,
     serviceItems: [],
     totalCost: 0,
+    serviceStartDate: "",
+    deliveryDate: "",
+    serviceStatus: "",
   });
 
   const [newItem, setNewItem] = useState({ itemName: "", itemCost: 0 });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingRecords, setExistingRecords] = useState<
+    Array<{
+      id: number;
+      bikeNumber: string;
+      userName: string;
+      serviceType: string;
+      serviceStatus: string;
+      created_at: string;
+    }>
+  >([]);
+  const [showExistingRecords, setShowExistingRecords] = useState(false);
 
   const serviceTypes = [
     "Basic Tune-Up",
@@ -50,16 +78,51 @@ const BikeStorepage = () => {
     "Parts Replacement",
   ];
 
+  const serviceStatuses = ["Pending", "In Progress", "Done", "Delivered"];
+
+  const checkExistingRecords = async (bikeNumber: string) => {
+    if (!bikeNumber.trim()) return;
+
+    const { data } = await supabase
+      .from("bike_records")
+      .select("*")
+      .eq("bikeNumber", bikeNumber.toUpperCase())
+      .order("created_at", { ascending: false });
+
+    if (data && data.length > 0) {
+      setExistingRecords(data);
+      setShowExistingRecords(true);
+    } else {
+      setExistingRecords([]);
+      setShowExistingRecords(false);
+    }
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
     const { name, value } = e.target;
+
+    // Convert bike number to uppercase
+    let processedValue = value;
+    if (name === "bikeNumber") {
+      processedValue = value.toUpperCase();
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "serviceCost" ? parseFloat(value) || 0 : value,
+      [name]:
+        name === "serviceCost"
+          ? parseFloat(processedValue) || 0
+          : processedValue,
     }));
+
+    // Check for existing records when bike number is entered
+    if (name === "bikeNumber" && processedValue.length >= 4) {
+      checkExistingRecords(processedValue);
+    }
   };
 
   const addServiceItem = () => {
@@ -100,8 +163,11 @@ const BikeStorepage = () => {
 
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Bike record submitted:", formData);
+      const { data, error } = await supabase
+        .from("bike_records")
+        .insert(formData);
+      console.log(data);
+      console.log(error);
 
       // Reset form after successful submission
       setFormData({
@@ -113,9 +179,16 @@ const BikeStorepage = () => {
         serviceCost: 0,
         serviceItems: [],
         totalCost: 0,
+        serviceStartDate: "",
+        deliveryDate: "",
+        serviceStatus: "",
       });
-
-      alert("Bike information saved successfully!");
+      // show alert only if data is inserted
+      if (data && !error) {
+        alert("Bike information saved successfully!");
+      } else {
+        alert("Error saving bike information. Please try again.");
+      }
     } catch (error) {
       console.error("Error saving bike record:", error);
       alert("Error saving bike information. Please try again.");
@@ -137,9 +210,20 @@ const BikeStorepage = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
             Add Bike Information
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-600 text-lg mb-6">
             Enter bike details and service information
           </p>
+
+          {/* Navigation Link */}
+          <div className="flex justify-center">
+            <Link
+              href="/admin/service-store"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+            >
+              <Search className="h-4 w-4" />
+              Search Bike Records
+            </Link>
+          </div>
         </div>
 
         {/* Form */}
@@ -170,6 +254,56 @@ const BikeStorepage = () => {
                     placeholder="e.g., HP 17A 1234"
                     className="block w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500"
                   />
+
+                  {/* Existing Records Display */}
+                  {showExistingRecords && existingRecords.length > 0 && (
+                    <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <h4 className="text-sm font-semibold text-yellow-800 mb-3">
+                        ⚠️ Previous Service Records Found
+                      </h4>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {existingRecords.slice(0, 3).map((record, index) => (
+                          <div
+                            key={record.id}
+                            className="bg-white rounded p-3 border border-yellow-200"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-gray-900">
+                                  Visit #{existingRecords.length - index}
+                                </p>
+                                <p className="text-xs text-gray-600">
+                                  {record.serviceType} • {record.serviceStatus}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {new Date(
+                                    record.created_at
+                                  ).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <span
+                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  record.serviceStatus === "Pending"
+                                    ? "bg-gray-100 text-gray-800"
+                                    : record.serviceStatus === "In Progress"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : record.serviceStatus === "Done"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-blue-100 text-blue-800"
+                                }`}
+                              >
+                                {record.serviceStatus}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-yellow-700 mt-2">
+                        💡 This will create a new service record. Previous
+                        records will be preserved.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -191,6 +325,30 @@ const BikeStorepage = () => {
                     {serviceTypes.map((type) => (
                       <option key={type} value={type}>
                         {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mt-6">
+                  <label
+                    htmlFor="serviceStatus"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Service Status *
+                  </label>
+                  <select
+                    id="serviceStatus"
+                    name="serviceStatus"
+                    required
+                    value={formData.serviceStatus}
+                    onChange={handleInputChange}
+                    className="block w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900"
+                  >
+                    <option value="">Select service status</option>
+                    {serviceStatuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
                       </option>
                     ))}
                   </select>
@@ -265,6 +423,52 @@ const BikeStorepage = () => {
               </div>
             </div>
 
+            {/* Service Timeline Section */}
+            <div className="bg-orange-50 rounded-xl p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <Clock className="h-5 w-5 text-orange-600" />
+                Service Timeline
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    htmlFor="serviceStartDate"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Service Start Date *
+                  </label>
+                  <input
+                    type="date"
+                    id="serviceStartDate"
+                    name="serviceStartDate"
+                    required
+                    value={formData.serviceStartDate}
+                    onChange={handleInputChange}
+                    className="block w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="deliveryDate"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Expected Delivery Date *
+                  </label>
+                  <input
+                    type="date"
+                    id="deliveryDate"
+                    name="deliveryDate"
+                    required
+                    value={formData.deliveryDate}
+                    onChange={handleInputChange}
+                    className="block w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Service Cost Section */}
             <div className="bg-purple-50 rounded-xl p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -315,7 +519,7 @@ const BikeStorepage = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div>
                   <input
-                    type="number"
+                    type="text"
                     placeholder="Enter item name"
                     value={newItem.itemName || ""}
                     onChange={(e) =>
@@ -394,6 +598,7 @@ const BikeStorepage = () => {
                 type="submit"
                 disabled={isSubmitting}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-8 py-3 rounded-lg font-semibold transition duration-200 flex items-center gap-2"
+                onClick={handleSubmit}
               >
                 {isSubmitting ? (
                   <>

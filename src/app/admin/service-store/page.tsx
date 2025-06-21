@@ -1,7 +1,25 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Bike, Wrench, Clock, User, Phone, MapPin } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
+import { Plus } from "lucide-react";
+import Link from "next/link";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+import {
+  Search,
+  Bike,
+  Wrench,
+  Clock,
+  User,
+  Phone,
+  MapPin,
+  DollarSign,
+} from "lucide-react";
 
 interface ServiceRecord {
   bikeNumber: string;
@@ -13,34 +31,129 @@ interface ServiceRecord {
   dropDate: string;
   estimatedCompletion: string;
   address: string;
+  serviceCost: number;
+  serviceItems: Array<{
+    id: string;
+    itemName: string;
+    itemCost: number;
+  }>;
+  totalCost: number;
+  serviceStartDate: string;
+  deliveryDate: string;
+  serviceStatus: string;
 }
 
 const ServicePage = () => {
   const [bikeNumber, setBikeNumber] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchResult, setSearchResult] = useState<ServiceRecord | null>(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [allRecords, setAllRecords] = useState<ServiceRecord[]>([]);
+  const [selectedRecord, setSelectedRecord] = useState<ServiceRecord | null>(
+    null
+  );
 
   const handleSearch = async () => {
     if (!bikeNumber.trim()) return;
 
     setIsSearching(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      // Mock data - replace with actual API call
-      setSearchResult({
-        bikeNumber: bikeNumber,
-        customerName: "John Doe",
-        phone: "+91 98765 43210",
-        bikeModel: "Honda Activa 6G",
-        serviceType: "Full Service",
-        status: "In Progress",
-        dropDate: "2024-01-15",
-        estimatedCompletion: "2024-01-17",
-        address: "123 Main Street, City, State 12345",
+    // Convert search input to uppercase for consistency
+    const searchTerm = bikeNumber.trim().toUpperCase();
+
+    // Check if the search term is exactly 4 digits (last 4 digits search)
+    const isLastFourDigits = /^\d{4}$/.test(searchTerm);
+
+    let query = supabase.from("bike_records").select("*");
+
+    if (isLastFourDigits) {
+      // Search by last 4 digits using LIKE query
+      query = query.ilike("bikeNumber", `%${searchTerm}`);
+    } else {
+      // Search by exact bike number
+      query = query.eq("bikeNumber", searchTerm);
+    }
+
+    const { data, error } = await query;
+    console.log(data);
+    console.log(error);
+
+    if (data && data.length > 0 && !error) {
+      const records = data.map((record) => {
+        // Parse serviceItems from JSON string to array
+        let parsedServiceItems: Array<{
+          id: string;
+          itemName: string;
+          itemCost: number;
+        }> = [];
+        try {
+          parsedServiceItems = JSON.parse(record.serviceItems || "[]");
+        } catch (e) {
+          console.error("Error parsing serviceItems:", e);
+          parsedServiceItems = [];
+        }
+
+        return {
+          bikeNumber: record.bikeNumber,
+          customerName: record.userName,
+          phone: record.phoneNumber?.toString() || "",
+          bikeModel: record.bikeModel || "Not specified",
+          serviceType: record.serviceType,
+          status: record.status || "In Progress",
+          dropDate: record.dropDate || new Date().toISOString().split("T")[0],
+          estimatedCompletion:
+            record.estimatedCompletion ||
+            new Date().toISOString().split("T")[0],
+          address: record.address,
+          serviceCost: record.serviceCost || 0,
+          serviceItems: parsedServiceItems,
+          totalCost: record.totalCost || 0,
+          serviceStartDate:
+            record.serviceStartDate || new Date().toISOString().split("T")[0],
+          deliveryDate:
+            record.deliveryDate || new Date().toISOString().split("T")[0],
+          serviceStatus: record.serviceStatus || "In Progress",
+        };
       });
-      setIsSearching(false);
-    }, 1000);
+
+      setAllRecords(records);
+      setSelectedRecord(records[0]); // Set the most recent record as selected
+      setSearchResult(records[0]);
+    } else {
+      setAllRecords([]);
+      setSelectedRecord(null);
+      setSearchResult(null);
+    }
+
+    setIsSearching(false);
+  };
+
+  const updateServiceStatus = async (newStatus: string) => {
+    if (!searchResult) return;
+
+    setIsUpdatingStatus(true);
+
+    try {
+      const { error } = await supabase
+        .from("bike_records")
+        .update({ serviceStatus: newStatus })
+        .eq("bikeNumber", searchResult.bikeNumber);
+
+      if (!error) {
+        // Update local state
+        setSearchResult((prev) =>
+          prev ? { ...prev, serviceStatus: newStatus } : null
+        );
+        alert(`Service status updated to: ${newStatus}`);
+      } else {
+        alert("Error updating service status. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      alert("Error updating service status. Please try again.");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
   return (
@@ -75,12 +188,11 @@ const ServicePage = () => {
                 </div>
                 <input
                   type="text"
-                  placeholder="Enter bike number"
+                  placeholder="Enter bike number or last 4 digits"
                   value={bikeNumber}
                   onChange={(e) => setBikeNumber(e.target.value)}
                   className="block w-full pl-10 pr-3 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500"
                   onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                  maxLength={4}
                 />
               </div>
               <button
@@ -101,6 +213,26 @@ const ServicePage = () => {
                 )}
               </button>
             </div>
+
+            {/* Search Hint */}
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                💡 Tip: You can search by full bike number (e.g., &ldquo;HP 17AA
+                1234&rdquo;) or just the last 4 digits (e.g.,
+                &ldquo;1234&rdquo;)
+              </p>
+            </div>
+
+            {/* Add New Bike Link */}
+            <div className="mt-6 text-center">
+              <Link
+                href="/admin/bike-store"
+                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+              >
+                <Plus className="h-4 w-4" />
+                Add New Bike Record
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -110,6 +242,58 @@ const ServicePage = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
               Service Details
             </h2>
+
+            {/* Service History */}
+            {allRecords.length > 1 && (
+              <div className="mb-6 bg-gray-50 rounded-xl p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Service History ({allRecords.length} visits)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {allRecords.map((record, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setSelectedRecord(record);
+                        setSearchResult(record);
+                      }}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        selectedRecord === record
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 bg-white hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="text-left">
+                        <p className="font-medium text-gray-900">
+                          Visit #{allRecords.length - index}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {record.serviceType}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(
+                            record.serviceStartDate
+                          ).toLocaleDateString()}
+                        </p>
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
+                            record.serviceStatus === "Pending"
+                              ? "bg-gray-100 text-gray-800"
+                              : record.serviceStatus === "In Progress"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : record.serviceStatus === "Done"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-blue-100 text-blue-800"
+                          }`}
+                        >
+                          {record.serviceStatus}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Customer Information */}
@@ -193,18 +377,22 @@ const ServicePage = () => {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-600">
-                        Status
+                        Service Status
                       </label>
                       <span
                         className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          searchResult.status === "In Progress"
+                          searchResult.serviceStatus === "Pending"
+                            ? "bg-gray-100 text-gray-800"
+                            : searchResult.serviceStatus === "In Progress"
                             ? "bg-yellow-100 text-yellow-800"
-                            : searchResult.status === "Completed"
+                            : searchResult.serviceStatus === "Done"
                             ? "bg-green-100 text-green-800"
-                            : "bg-blue-100 text-blue-800"
+                            : searchResult.serviceStatus === "Delivered"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {searchResult.status}
+                        {searchResult.serviceStatus}
                       </span>
                     </div>
                   </div>
@@ -213,23 +401,73 @@ const ServicePage = () => {
                 <div className="bg-orange-50 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <Clock className="h-5 w-5 text-orange-600" />
-                    Timeline
+                    Service Timeline
                   </h3>
                   <div className="space-y-3">
                     <div>
                       <label className="text-sm font-medium text-gray-600">
-                        Drop Date
+                        Service Start Date
                       </label>
                       <p className="text-gray-900 font-medium">
-                        {searchResult.dropDate}
+                        {searchResult.serviceStartDate}
                       </p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-600">
-                        Estimated Completion
+                        Expected Delivery Date
                       </label>
                       <p className="text-gray-900 font-medium">
-                        {searchResult.estimatedCompletion}
+                        {searchResult.deliveryDate}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Service Items and Costs */}
+                <div className="bg-indigo-50 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-indigo-600" />
+                    Service Items & Costs
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">
+                        Service Cost
+                      </label>
+                      <p className="text-gray-900 font-medium">
+                        ₹{searchResult.serviceCost.toFixed(2)}
+                      </p>
+                    </div>
+
+                    {searchResult.serviceItems.length > 0 && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600 mb-2 block">
+                          Service Items
+                        </label>
+                        <div className="space-y-2">
+                          {searchResult.serviceItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex justify-between items-center bg-white rounded-lg p-2"
+                            >
+                              <span className="text-gray-900">
+                                {item.itemName}
+                              </span>
+                              <span className="text-gray-900 font-medium">
+                                ₹{item.itemCost.toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="border-t pt-3">
+                      <label className="text-sm font-medium text-gray-600">
+                        Total Cost
+                      </label>
+                      <p className="text-xl font-bold text-gray-900">
+                        ₹{searchResult.totalCost.toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -239,14 +477,70 @@ const ServicePage = () => {
 
             {/* Action Buttons */}
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
-                Update Status
+              <button
+                onClick={() => updateServiceStatus("Pending")}
+                disabled={
+                  isUpdatingStatus || searchResult.serviceStatus === "Pending"
+                }
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+              >
+                {isUpdatingStatus ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Updating...
+                  </>
+                ) : (
+                  <>Mark Pending</>
+                )}
               </button>
-              <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
-                Mark Complete
+              <button
+                onClick={() => updateServiceStatus("In Progress")}
+                disabled={
+                  isUpdatingStatus ||
+                  searchResult.serviceStatus === "In Progress"
+                }
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+              >
+                {isUpdatingStatus ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Updating...
+                  </>
+                ) : (
+                  <>Mark In Progress</>
+                )}
               </button>
-              <button className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
-                Print Receipt
+              <button
+                onClick={() => updateServiceStatus("Done")}
+                disabled={
+                  isUpdatingStatus || searchResult.serviceStatus === "Done"
+                }
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+              >
+                {isUpdatingStatus ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Updating...
+                  </>
+                ) : (
+                  <>Mark Done</>
+                )}
+              </button>
+              <button
+                onClick={() => updateServiceStatus("Delivered")}
+                disabled={
+                  isUpdatingStatus || searchResult.serviceStatus === "Delivered"
+                }
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+              >
+                {isUpdatingStatus ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Updating...
+                  </>
+                ) : (
+                  <>Mark Delivered</>
+                )}
               </button>
             </div>
           </div>
