@@ -30,7 +30,11 @@ const ContactSection = () => {
                 <Phone className="h-6 w-6 mr-4 text-blue-200" />
                 <div>
                   <div className="font-semibold">Phone</div>
-                  <div className="text-blue-100">+91 83509-02050</div>
+                  <div className="text-blue-100">
+                    <a href="tel:+918350902050" className="hover:text-blue-200">
+                      +91 83509-02050
+                    </a>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center">

@@ -63,7 +63,11 @@ const Footer = () => {
               <div>
                 Main Bus Stand, Sataun, Sirmour, Himachal Pradesh, India
               </div>
-              <div>+91 83509-02050</div>
+              <div>
+                <a href="tel:+918350902050" className="hover:text-white">
+                  +91 83509-02050
+                </a>
+              </div>
               <div>Mon-Sat: 9AM-8PM</div>
               <div>Sun: 9AM-6PM</div>
             </div>
