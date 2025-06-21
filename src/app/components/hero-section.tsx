@@ -14,9 +14,9 @@ const HeroSection = () => {
               Expert Bike Repair & Maintenance
             </h1>
             <p className="text-xl mb-8 text-blue-100">
-              Professional bike repair services with over 15 years of
-              experience. We fix all types of bicycles with quality parts and
-              expert craftsmanship.
+              Professional bike repair services with over 8 years of experience.
+              We fix all types of bicycles with quality parts and expert
+              craftsmanship.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">

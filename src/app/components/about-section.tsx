@@ -11,9 +11,9 @@ const AboutSection = () => {
               About Mahadev Automobiles
             </h2>
             <p className="text-lg text-gray-600 mb-6">
-              Founded in 2008, Mahadev Automobiles has been serving the
+              Founded in 2016, Mahadev Automobiles has been serving the
               community with exceptional bike repair and maintenance services.
-              Our certified mechanics have over 15 years of combined experience.
+              Our certified mechanics have over 8 years of combined experience.
             </p>
             <p className="text-lg text-gray-600 mb-8">
               We believe in quality workmanship, honest pricing, and building
@@ -22,7 +22,7 @@ const AboutSection = () => {
             </p>
             <div className="grid grid-cols-2 gap-6">
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600 mb-2">15+</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">8+</div>
                 <div className="text-gray-600">Years Experience</div>
               </div>
               <div className="text-center">
@@ -44,7 +44,7 @@ const AboutSection = () => {
             </div>
           </div>
           <div className="bg-white rounded-2xl p-8 shadow-lg">
-            <h3 className="text-2xl font-bold mb-6 text-center">
+            <h3 className="text-2xl font-bold mb-6 text-center text-blue-600">
               Why Choose Us?
             </h3>
             <div className="space-y-4">
@@ -53,7 +53,9 @@ const AboutSection = () => {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Certified Mechanics</h4>
+                  <h4 className="font-semibold mb-1 text-black">
+                    Certified Mechanics
+                  </h4>
                   <p className="text-gray-600 text-sm">
                     All our technicians are certified and experienced
                   </p>
@@ -64,7 +66,9 @@ const AboutSection = () => {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Quality Parts</h4>
+                  <h4 className="font-semibold mb-1 text-black">
+                    Quality Parts
+                  </h4>
                   <p className="text-gray-600 text-sm">
                     We use only premium components and parts
                   </p>
@@ -75,9 +79,9 @@ const AboutSection = () => {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Warranty</h4>
+                  <h4 className="font-semibold mb-1 text-black">Warranty</h4>
                   <p className="text-gray-600 text-sm">
-                    All repairs come with a 90-day warranty
+                    All repairs come with a limited warranty
                   </p>
                 </div>
               </div>
@@ -86,7 +90,9 @@ const AboutSection = () => {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1">Fair Pricing</h4>
+                  <h4 className="font-semibold mb-1 text-black">
+                    Fair Pricing
+                  </h4>
                   <p className="text-gray-600 text-sm">
                     Transparent pricing with no hidden fees
                   </p>

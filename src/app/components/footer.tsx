@@ -50,14 +50,22 @@ const Footer = () => {
                   Contact
                 </a>
               </li>
+              <li>
+                <a href="/admin/login" className="hover:text-white">
+                  Admin
+                </a>
+              </li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-4">Contact</h4>
             <div className="space-y-2 text-gray-400">
-              <div>123 Bike Street</div>
-              <div>Cycling City, CC 12345</div>
-              <div>(555) 123-4567</div>
+              <div>
+                Main Bus Stand, Sataun, Sirmour, Himachal Pradesh, India
+              </div>
+              <div>+91 83509-02050</div>
+              <div>Mon-Sat: 9AM-8PM</div>
+              <div>Sun: 9AM-6PM</div>
             </div>
           </div>
         </div>

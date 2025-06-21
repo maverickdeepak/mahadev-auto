@@ -21,7 +21,8 @@ const ContactSection = () => {
                 <div>
                   <div className="font-semibold">Address</div>
                   <div className="text-blue-100">
-                    123 Bike Street, Cycling City, CC 12345
+                    Main Bus Stand, Sataun, Sirmour, Himachal Pradesh, India
+                    173029
                   </div>
                 </div>
               </div>
@@ -29,7 +30,7 @@ const ContactSection = () => {
                 <Phone className="h-6 w-6 mr-4 text-blue-200" />
                 <div>
                   <div className="font-semibold">Phone</div>
-                  <div className="text-blue-100">(555) 123-4567</div>
+                  <div className="text-blue-100">+91 83509-02050</div>
                 </div>
               </div>
               <div className="flex items-center">
@@ -37,11 +38,9 @@ const ContactSection = () => {
                 <div>
                   <div className="font-semibold">Hours</div>
                   <div className="text-blue-100">
-                    Mon-Fri: 8AM-6PM
+                    Mon-Sat: 9AM-8PM
                     <br />
-                    Sat: 9AM-5PM
-                    <br />
-                    Sun: 10AM-4PM
+                    Sun: 9AM-6PM
                   </div>
                 </div>
               </div>

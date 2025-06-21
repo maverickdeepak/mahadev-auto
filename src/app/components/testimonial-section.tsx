@@ -35,7 +35,7 @@ const TestimonialsSection = () => {
                 JS
               </div>
               <div>
-                <div className="font-semibold">John Smith</div>
+                <div className="font-semibold text-black">Amit Chauhan</div>
                 <div className="text-sm text-gray-500">Mountain Biker</div>
               </div>
             </div>
@@ -60,7 +60,7 @@ const TestimonialsSection = () => {
                 MJ
               </div>
               <div>
-                <div className="font-semibold">Maria Johnson</div>
+                <div className="font-semibold text-black">Deepak Chauhan</div>
                 <div className="text-sm text-gray-500">Commuter</div>
               </div>
             </div>
@@ -85,7 +85,7 @@ const TestimonialsSection = () => {
                 DL
               </div>
               <div>
-                <div className="font-semibold">David Lee</div>
+                <div className="font-semibold text-black">Akhil Chaudhary</div>
                 <div className="text-sm text-gray-500">Road Cyclist</div>
               </div>
             </div>
