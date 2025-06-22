@@ -14,7 +14,7 @@ const Footer = () => {
               </span>
             </div>
             <p className="text-gray-400">
-              Professional bike repair and maintenance services with over 15
+              Professional bike repair and maintenance services with over 7+
               years of experience.
             </p>
           </div>
