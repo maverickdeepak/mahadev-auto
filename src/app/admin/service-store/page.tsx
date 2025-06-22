@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { useAuth } from "../../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -123,10 +124,12 @@ const ServicePage = () => {
       setAllRecords(records);
       setSelectedRecord(records[0]); // Set the most recent record as selected
       setSearchResult(records[0]);
+      toast.success(`Found ${records.length} service record(s)`);
     } else {
       setAllRecords([]);
       setSelectedRecord(null);
       setSearchResult(null);
+      toast.error("No service records found for this bike number");
     }
 
     setIsSearching(false);
@@ -148,13 +151,13 @@ const ServicePage = () => {
         setSearchResult((prev) =>
           prev ? { ...prev, serviceStatus: newStatus } : null
         );
-        alert(`Service status updated to: ${newStatus}`);
+        toast.success(`Service status updated to: ${newStatus}`);
       } else {
-        alert("Error updating service status. Please try again.");
+        toast.error("Error updating service status. Please try again.");
       }
     } catch (error) {
       console.error("Error updating status:", error);
-      alert("Error updating service status. Please try again.");
+      toast.error("Error updating service status. Please try again.");
     } finally {
       setIsUpdatingStatus(false);
     }

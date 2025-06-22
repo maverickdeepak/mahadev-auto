@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -12,7 +13,6 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 import { Eye, EyeOff, Lock, Mail, Bike } from "lucide-react";
-import Link from "next/link";
 
 export default function AdminLogin() {
   const { user, loading } = useAuth();
@@ -78,8 +78,9 @@ export default function AdminLogin() {
       console.log(data);
       console.log(error);
       if (error) {
-        setErrors({ general: "Invalid email or password" });
+        toast.error("Invalid email or password");
       } else {
+        toast.success("Login successful!");
         window.location.href = "/admin/bike-store";
       }
 
@@ -87,7 +88,7 @@ export default function AdminLogin() {
       console.log("Login attempt:", formData);
     } catch (error) {
       console.error("Login error:", error);
-      setErrors({ general: "Login failed. Please try again." });
+      toast.error("Login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }

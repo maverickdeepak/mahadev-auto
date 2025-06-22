@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { useAuth } from "../../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -97,6 +98,13 @@ const BikeStorepage = () => {
     if (data && data.length > 0) {
       setExistingRecords(data);
       setShowExistingRecords(true);
+      toast(
+        `${data.length} previous service record(s) found for this bike number`,
+        {
+          icon: "🔍",
+          duration: 5000,
+        }
+      );
     } else {
       setExistingRecords([]);
       setShowExistingRecords(false);
@@ -148,16 +156,30 @@ const BikeStorepage = () => {
       }));
 
       setNewItem({ itemName: "", itemCost: 0 });
+      toast.success(
+        `Added ${newItem.itemName} - ₹${newItem.itemCost.toFixed(2)}`
+      );
+    } else {
+      toast.error("Please enter both item name and cost");
     }
   };
 
   const removeServiceItem = (id: string) => {
     setFormData((prev) => {
       const removedItem = prev.serviceItems.find((item) => item.id === id);
+      const updatedItems = prev.serviceItems.filter((item) => item.id !== id);
+      const newTotalCost =
+        prev.serviceCost +
+        updatedItems.reduce((sum, item) => sum + item.itemCost, 0);
+
+      if (removedItem) {
+        toast.success(`Removed ${removedItem.itemName}`);
+      }
+
       return {
         ...prev,
-        serviceItems: prev.serviceItems.filter((item) => item.id !== id),
-        totalCost: prev.totalCost - (removedItem?.itemCost || 0),
+        serviceItems: updatedItems,
+        totalCost: newTotalCost,
       };
     });
   };
@@ -188,15 +210,15 @@ const BikeStorepage = () => {
         deliveryDate: "",
         serviceStatus: "",
       });
-      // show alert only if data is inserted
+      // show toast only if data is inserted
       if (data && !error) {
-        alert("Bike information saved successfully!");
+        toast.success("Bike information saved successfully!");
       } else {
-        alert("Error saving bike information. Please try again.");
+        toast.error("Error saving bike information. Please try again.");
       }
     } catch (error) {
       console.error("Error saving bike record:", error);
-      alert("Error saving bike information. Please try again.");
+      toast.error("Error saving bike information. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

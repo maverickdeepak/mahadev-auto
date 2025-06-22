@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!loading && !user) {
+      toast.error("Please log in to access this page");
       router.push("/admin/login");
     }
   }, [user, loading, router]);

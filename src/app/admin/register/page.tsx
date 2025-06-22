@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
+import toast from "react-hot-toast";
 import {
   Eye,
   EyeOff,
@@ -117,11 +118,12 @@ export default function AdminRegister() {
       // Here you would typically make an API call to register the admin
       console.log("Registration attempt:", formData);
 
+      toast.success("Account created successfully!");
       // For demo purposes, redirect to admin dashboard
       window.location.href = "/admin";
     } catch (error) {
       console.error("Registration error:", error);
-      setErrors({ general: "Registration failed. Please try again." });
+      toast.error("Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
