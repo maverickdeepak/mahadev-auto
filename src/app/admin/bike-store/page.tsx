@@ -20,7 +20,6 @@ import {
   Bike,
   User,
   Wrench,
-  DollarSign,
   Save,
   Plus,
   Trash2,
@@ -28,6 +27,7 @@ import {
   Search,
   LogOut,
   BarChart3,
+  IndianRupee,
 } from "lucide-react";
 
 interface BikeServiceItem {
@@ -579,7 +579,7 @@ const BikeStorepage = () => {
               {/* Service Cost Section */}
               <div className="bg-purple-50 rounded-xl p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-purple-600" />
+                  <IndianRupee className="h-5 w-5 text-purple-600" />
                   Service Cost
                 </h2>
 

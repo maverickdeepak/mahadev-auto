@@ -25,7 +25,7 @@ import {
   User,
   Phone,
   MapPin,
-  DollarSign,
+  IndianRupee,
   LogOut,
 } from "lucide-react";
 
@@ -1101,7 +1101,7 @@ const ServicePage = () => {
                   <div className="bg-indigo-50 rounded-xl p-6">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-indigo-600" />
+                        <IndianRupee className="h-5 w-5 text-indigo-600" />
                         Service Items & Costs
                       </h3>
                       {searchResult.serviceStatus !== "Delivered" && (
@@ -1245,7 +1245,7 @@ const ServicePage = () => {
               <div className="bg-emerald-50 rounded-xl p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-emerald-600" />
+                    <IndianRupee className="h-5 w-5 text-emerald-600" />
                     Payment Tracking
                   </h3>
                   <div className="flex gap-2">
@@ -1269,7 +1269,7 @@ const ServicePage = () => {
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm font-medium transition duration-200 flex items-center gap-1"
                       title="Recalculate payment status"
                     >
-                      <DollarSign className="h-4 w-4" />
+                      <IndianRupee className="h-4 w-4" />
                       Recalculate
                     </button>
                   </div>

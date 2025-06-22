@@ -18,7 +18,7 @@ import { LucideIcon } from "lucide-react";
 import {
   BarChart3,
   Users,
-  DollarSign,
+  IndianRupee,
   Bike,
   Wrench,
   Activity,
@@ -259,7 +259,7 @@ const AnalyticsPage = () => {
                 <StatCard
                   title="Total Revenue"
                   value={`₹${analyticsData.overview.totalRevenue.toLocaleString()}`}
-                  icon={DollarSign}
+                  icon={IndianRupee}
                   color="bg-green-500"
                   subtitle={`₹${(
                     analyticsData.overview.totalRevenue /
