@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import ProtectedRoute from "../../components/ProtectedRoute";
@@ -11,7 +11,9 @@ import Clock from "../../components/Clock";
 import {
   processAnalyticsData,
   ServiceRecord,
+  AnalyticsData,
 } from "../../utils/analyticsUtils";
+import { LucideIcon } from "lucide-react";
 
 import {
   BarChart3,
@@ -34,14 +36,16 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const AnalyticsPage = () => {
   const { user, signOut } = useAuth();
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d" | "1y">(
     "30d"
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     setIsLoading(true);
     try {
       const endDate = new Date();
@@ -89,11 +93,11 @@ const AnalyticsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [timeRange]);
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, [timeRange]);
+  }, [fetchAnalyticsData]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -111,7 +115,7 @@ const AnalyticsPage = () => {
   }: {
     title: string;
     value: string | number;
-    icon: any;
+    icon: LucideIcon;
     color: string;
     subtitle?: string;
   }) => (
@@ -208,7 +212,9 @@ const AnalyticsPage = () => {
                 </h2>
                 <select
                   value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value as any)}
+                  onChange={(e) =>
+                    setTimeRange(e.target.value as "7d" | "30d" | "90d" | "1y")
+                  }
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="7d">Last 7 Days</option>
@@ -359,7 +365,7 @@ const AnalyticsPage = () => {
                 <ChartCard title="Service Type Breakdown">
                   <div className="space-y-3">
                     {analyticsData.serviceAnalytics.serviceTypeBreakdown.map(
-                      (service: any, index: number) => (
+                      (service, index) => (
                         <div
                           key={service.serviceType}
                           className="flex items-center justify-between"
@@ -399,7 +405,7 @@ const AnalyticsPage = () => {
                 <ChartCard title="Top Customers">
                   <div className="space-y-3">
                     {analyticsData.customerAnalytics.topCustomers.map(
-                      (customer: any, index: number) => (
+                      (customer) => (
                         <div
                           key={customer.bikeNumber}
                           className="flex items-center justify-between"
@@ -480,15 +486,7 @@ const AnalyticsPage = () => {
                     {analyticsData?.revenueAnalytics?.paymentMethods?.length >
                     0 ? (
                       analyticsData.revenueAnalytics.paymentMethods.map(
-                        (
-                          method: {
-                            method: string;
-                            count: number;
-                            amount: number;
-                            percentage: number;
-                          },
-                          index: number
-                        ) => (
+                        (method, index) => (
                           <div
                             key={method.method}
                             className="flex items-center justify-between"
