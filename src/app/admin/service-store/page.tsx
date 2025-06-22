@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import ProtectedRoute from "../../components/ProtectedRoute";
+import { useAuth } from "../../contexts/AuthContext";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -19,6 +21,7 @@ import {
   Phone,
   MapPin,
   DollarSign,
+  LogOut,
 } from "lucide-react";
 
 interface ServiceRecord {
@@ -44,6 +47,7 @@ interface ServiceRecord {
 }
 
 const ServicePage = () => {
+  const { user, signOut } = useAuth();
   const [bikeNumber, setBikeNumber] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchResult, setSearchResult] = useState<ServiceRecord | null>(null);
@@ -157,411 +161,431 @@ const ServicePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="bg-blue-600 p-3 rounded-full">
-              <Bike className="h-8 w-8 text-white" />
-            </div>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            Service Store
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Find bike service details by bike number
-          </p>
-        </div>
-
-        {/* Search Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-              Search Bike Service
-            </h2>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex-1"></div>
+              <div className="flex justify-center flex-1">
+                <div className="bg-blue-600 p-3 rounded-full">
+                  <Bike className="h-8 w-8 text-white" />
                 </div>
-                <input
-                  type="text"
-                  placeholder="Enter bike number or last 4 digits"
-                  value={bikeNumber}
-                  onChange={(e) => setBikeNumber(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500"
-                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                />
               </div>
-              <button
-                onClick={handleSearch}
-                disabled={isSearching || !bikeNumber.trim()}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 flex items-center justify-center gap-2"
-              >
-                {isSearching ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4" />
-                    Find Bike
-                  </>
-                )}
-              </button>
+              <div className="flex-1 flex justify-end">
+                <button
+                  onClick={signOut}
+                  className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition duration-200"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
+              </div>
             </div>
-
-            {/* Search Hint */}
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600">
-                💡 Tip: You can search by full bike number (e.g., &ldquo;HP 17AA
-                1234&rdquo;) or just the last 4 digits (e.g.,
-                &ldquo;1234&rdquo;)
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              Service Store
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Find bike service details by bike number
+            </p>
+            {user && (
+              <p className="text-sm text-gray-500 mt-2">
+                Logged in as: {user.email}
               </p>
-            </div>
+            )}
+          </div>
 
-            {/* Add New Bike Link */}
-            <div className="mt-6 text-center">
-              <Link
-                href="/admin/bike-store"
-                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
-              >
-                <Plus className="h-4 w-4" />
-                Add New Bike Record
-              </Link>
+          {/* Search Section */}
+          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div className="max-w-2xl mx-auto">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+                Search Bike Service
+              </h2>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Enter bike number or last 4 digits"
+                    value={bikeNumber}
+                    onChange={(e) => setBikeNumber(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500"
+                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                  />
+                </div>
+                <button
+                  onClick={handleSearch}
+                  disabled={isSearching || !bikeNumber.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 flex items-center justify-center gap-2"
+                >
+                  {isSearching ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Searching...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4" />
+                      Find Bike
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Search Hint */}
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">
+                  💡 Tip: You can search by full bike number (e.g., &ldquo;HP
+                  17AA 1234&rdquo;) or just the last 4 digits (e.g.,
+                  &ldquo;1234&rdquo;)
+                </p>
+              </div>
+
+              {/* Add New Bike Link */}
+              <div className="mt-6 text-center">
+                <Link
+                  href="/admin/bike-store"
+                  className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add New Bike Record
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Results Section */}
-        {searchResult && (
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Service Details
-            </h2>
+          {/* Results Section */}
+          {searchResult && (
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Service Details
+              </h2>
 
-            {/* Service History */}
-            {allRecords.length > 1 && (
-              <div className="mb-6 bg-gray-50 rounded-xl p-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Service History ({allRecords.length} visits)
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {allRecords.map((record, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSelectedRecord(record);
-                        setSearchResult(record);
-                      }}
-                      className={`p-3 rounded-lg border-2 transition-all ${
-                        selectedRecord === record
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 bg-white hover:border-gray-300"
-                      }`}
-                    >
-                      <div className="text-left">
-                        <p className="font-medium text-gray-900">
-                          Visit #{allRecords.length - index}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {record.serviceType}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(
-                            record.serviceStartDate
-                          ).toLocaleDateString()}
-                        </p>
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
-                            record.serviceStatus === "Pending"
-                              ? "bg-gray-100 text-gray-800"
-                              : record.serviceStatus === "In Progress"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : record.serviceStatus === "Done"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}
-                        >
-                          {record.serviceStatus}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Customer Information */}
-              <div className="space-y-6">
-                <div className="bg-blue-50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <User className="h-5 w-5 text-blue-600" />
-                    Customer Information
+              {/* Service History */}
+              {allRecords.length > 1 && (
+                <div className="mb-6 bg-gray-50 rounded-xl p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Service History ({allRecords.length} visits)
                   </h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">
-                        Name
-                      </label>
-                      <p className="text-gray-900 font-medium">
-                        {searchResult.customerName}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">
-                        Phone
-                      </label>
-                      <p className="text-gray-900 font-medium flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-blue-600" />
-                        {searchResult.phone}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">
-                        Address
-                      </label>
-                      <p className="text-gray-900 font-medium flex items-start gap-2">
-                        <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                        {searchResult.address}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-green-50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Bike className="h-5 w-5 text-green-600" />
-                    Bike Information
-                  </h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">
-                        Bike Number
-                      </label>
-                      <p className="text-gray-900 font-medium">
-                        {searchResult.bikeNumber}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">
-                        Model
-                      </label>
-                      <p className="text-gray-900 font-medium">
-                        {searchResult.bikeModel}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Service Information */}
-              <div className="space-y-6">
-                <div className="bg-purple-50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Wrench className="h-5 w-5 text-purple-600" />
-                    Service Details
-                  </h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">
-                        Service Type
-                      </label>
-                      <p className="text-gray-900 font-medium">
-                        {searchResult.serviceType}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">
-                        Service Status
-                      </label>
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          searchResult.serviceStatus === "Pending"
-                            ? "bg-gray-100 text-gray-800"
-                            : searchResult.serviceStatus === "In Progress"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : searchResult.serviceStatus === "Done"
-                            ? "bg-green-100 text-green-800"
-                            : searchResult.serviceStatus === "Delivered"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-800"
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {allRecords.map((record, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setSelectedRecord(record);
+                          setSearchResult(record);
+                        }}
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          selectedRecord === record
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 bg-white hover:border-gray-300"
                         }`}
                       >
-                        {searchResult.serviceStatus}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-orange-50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-orange-600" />
-                    Service Timeline
-                  </h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">
-                        Service Start Date
-                      </label>
-                      <p className="text-gray-900 font-medium">
-                        {searchResult.serviceStartDate}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">
-                        Expected Delivery Date
-                      </label>
-                      <p className="text-gray-900 font-medium">
-                        {searchResult.deliveryDate}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Service Items and Costs */}
-                <div className="bg-indigo-50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-indigo-600" />
-                    Service Items & Costs
-                  </h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">
-                        Service Cost
-                      </label>
-                      <p className="text-gray-900 font-medium">
-                        ₹{searchResult.serviceCost.toFixed(2)}
-                      </p>
-                    </div>
-
-                    {searchResult.serviceItems.length > 0 && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600 mb-2 block">
-                          Service Items
-                        </label>
-                        <div className="space-y-2">
-                          {searchResult.serviceItems.map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex justify-between items-center bg-white rounded-lg p-2"
-                            >
-                              <span className="text-gray-900">
-                                {item.itemName}
-                              </span>
-                              <span className="text-gray-900 font-medium">
-                                ₹{item.itemCost.toFixed(2)}
-                              </span>
-                            </div>
-                          ))}
+                        <div className="text-left">
+                          <p className="font-medium text-gray-900">
+                            Visit #{allRecords.length - index}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {record.serviceType}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(
+                              record.serviceStartDate
+                            ).toLocaleDateString()}
+                          </p>
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
+                              record.serviceStatus === "Pending"
+                                ? "bg-gray-100 text-gray-800"
+                                : record.serviceStatus === "In Progress"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : record.serviceStatus === "Done"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}
+                          >
+                            {record.serviceStatus}
+                          </span>
                         </div>
-                      </div>
-                    )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-                    <div className="border-t pt-3">
-                      <label className="text-sm font-medium text-gray-600">
-                        Total Cost
-                      </label>
-                      <p className="text-xl font-bold text-gray-900">
-                        ₹{searchResult.totalCost.toFixed(2)}
-                      </p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Customer Information */}
+                <div className="space-y-6">
+                  <div className="bg-blue-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <User className="h-5 w-5 text-blue-600" />
+                      Customer Information
+                    </h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Name
+                        </label>
+                        <p className="text-gray-900 font-medium">
+                          {searchResult.customerName}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Phone
+                        </label>
+                        <p className="text-gray-900 font-medium flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-blue-600" />
+                          {searchResult.phone}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Address
+                        </label>
+                        <p className="text-gray-900 font-medium flex items-start gap-2">
+                          <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                          {searchResult.address}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <Bike className="h-5 w-5 text-green-600" />
+                      Bike Information
+                    </h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Bike Number
+                        </label>
+                        <p className="text-gray-900 font-medium">
+                          {searchResult.bikeNumber}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Model
+                        </label>
+                        <p className="text-gray-900 font-medium">
+                          {searchResult.bikeModel}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Service Information */}
+                <div className="space-y-6">
+                  <div className="bg-purple-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <Wrench className="h-5 w-5 text-purple-600" />
+                      Service Details
+                    </h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Service Type
+                        </label>
+                        <p className="text-gray-900 font-medium">
+                          {searchResult.serviceType}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Service Status
+                        </label>
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                            searchResult.serviceStatus === "Pending"
+                              ? "bg-gray-100 text-gray-800"
+                              : searchResult.serviceStatus === "In Progress"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : searchResult.serviceStatus === "Done"
+                              ? "bg-green-100 text-green-800"
+                              : searchResult.serviceStatus === "Delivered"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {searchResult.serviceStatus}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-orange-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-orange-600" />
+                      Service Timeline
+                    </h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Service Start Date
+                        </label>
+                        <p className="text-gray-900 font-medium">
+                          {searchResult.serviceStartDate}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Expected Delivery Date
+                        </label>
+                        <p className="text-gray-900 font-medium">
+                          {searchResult.deliveryDate}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Service Items and Costs */}
+                  <div className="bg-indigo-50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-indigo-600" />
+                      Service Items & Costs
+                    </h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Service Cost
+                        </label>
+                        <p className="text-gray-900 font-medium">
+                          ₹{searchResult.serviceCost.toFixed(2)}
+                        </p>
+                      </div>
+
+                      {searchResult.serviceItems.length > 0 && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600 mb-2 block">
+                            Service Items
+                          </label>
+                          <div className="space-y-2">
+                            {searchResult.serviceItems.map((item) => (
+                              <div
+                                key={item.id}
+                                className="flex justify-between items-center bg-white rounded-lg p-2"
+                              >
+                                <span className="text-gray-900">
+                                  {item.itemName}
+                                </span>
+                                <span className="text-gray-900 font-medium">
+                                  ₹{item.itemCost.toFixed(2)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="border-t pt-3">
+                        <label className="text-sm font-medium text-gray-600">
+                          Total Cost
+                        </label>
+                        <p className="text-xl font-bold text-gray-900">
+                          ₹{searchResult.totalCost.toFixed(2)}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Action Buttons */}
-            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => updateServiceStatus("Pending")}
-                disabled={
-                  isUpdatingStatus || searchResult.serviceStatus === "Pending"
-                }
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
-              >
-                {isUpdatingStatus ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Updating...
-                  </>
-                ) : (
-                  <>Mark Pending</>
-                )}
-              </button>
-              <button
-                onClick={() => updateServiceStatus("In Progress")}
-                disabled={
-                  isUpdatingStatus ||
-                  searchResult.serviceStatus === "In Progress"
-                }
-                className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
-              >
-                {isUpdatingStatus ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Updating...
-                  </>
-                ) : (
-                  <>Mark In Progress</>
-                )}
-              </button>
-              <button
-                onClick={() => updateServiceStatus("Done")}
-                disabled={
-                  isUpdatingStatus || searchResult.serviceStatus === "Done"
-                }
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
-              >
-                {isUpdatingStatus ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Updating...
-                  </>
-                ) : (
-                  <>Mark Done</>
-                )}
-              </button>
-              <button
-                onClick={() => updateServiceStatus("Delivered")}
-                disabled={
-                  isUpdatingStatus || searchResult.serviceStatus === "Delivered"
-                }
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
-              >
-                {isUpdatingStatus ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Updating...
-                  </>
-                ) : (
-                  <>Mark Delivered</>
-                )}
-              </button>
+              {/* Action Buttons */}
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => updateServiceStatus("Pending")}
+                  disabled={
+                    isUpdatingStatus || searchResult.serviceStatus === "Pending"
+                  }
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+                >
+                  {isUpdatingStatus ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Updating...
+                    </>
+                  ) : (
+                    <>Mark Pending</>
+                  )}
+                </button>
+                <button
+                  onClick={() => updateServiceStatus("In Progress")}
+                  disabled={
+                    isUpdatingStatus ||
+                    searchResult.serviceStatus === "In Progress"
+                  }
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+                >
+                  {isUpdatingStatus ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Updating...
+                    </>
+                  ) : (
+                    <>Mark In Progress</>
+                  )}
+                </button>
+                <button
+                  onClick={() => updateServiceStatus("Done")}
+                  disabled={
+                    isUpdatingStatus || searchResult.serviceStatus === "Done"
+                  }
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+                >
+                  {isUpdatingStatus ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Updating...
+                    </>
+                  ) : (
+                    <>Mark Done</>
+                  )}
+                </button>
+                <button
+                  onClick={() => updateServiceStatus("Delivered")}
+                  disabled={
+                    isUpdatingStatus ||
+                    searchResult.serviceStatus === "Delivered"
+                  }
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+                >
+                  {isUpdatingStatus ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Updating...
+                    </>
+                  ) : (
+                    <>Mark Delivered</>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* No Results Message */}
-        {searchResult === null && !isSearching && (
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="flex justify-center mb-4">
-              <Search className="h-12 w-12 text-gray-400" />
+          {/* No Results Message */}
+          {searchResult === null && !isSearching && (
+            <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+              <div className="flex justify-center mb-4">
+                <Search className="h-12 w-12 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Search for a Bike
+              </h3>
+              <p className="text-gray-600">
+                Enter a bike number above to find service details
+              </p>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Search for a Bike
-            </h3>
-            <p className="text-gray-600">
-              Enter a bike number above to find service details
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 };
 

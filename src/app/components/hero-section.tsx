@@ -14,7 +14,7 @@ const HeroSection = () => {
               Expert Bike Repair & Maintenance
             </h1>
             <p className="text-xl mb-8 text-blue-100">
-              Professional bike repair services with over 8 years of experience.
+              Professional bike repair services with over 7 years of experience.
               We fix all types of bicycles with quality parts and expert
               craftsmanship.
             </p>

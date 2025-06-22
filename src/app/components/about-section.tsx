@@ -11,9 +11,9 @@ const AboutSection = () => {
               About Mahadev Automobiles
             </h2>
             <p className="text-lg text-gray-600 mb-6">
-              Founded in 2016, Mahadev Automobiles has been serving the
+              Founded in 2017, Mahadev Automobiles has been serving the
               community with exceptional bike repair and maintenance services.
-              Our certified mechanics have over 8 years of combined experience.
+              Our certified mechanics have over 7 years of combined experience.
             </p>
             <p className="text-lg text-gray-600 mb-8">
               We believe in quality workmanship, honest pricing, and building
