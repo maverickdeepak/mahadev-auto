@@ -97,8 +97,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Show loading toast
       const loadingToast = toast.loading("Signing out...");
 
+      // Clear local state immediately
+      setSession(null);
+      setUser(null);
+
       // Use Supabase's built-in signOut method
-      // This automatically removes all items from localStorage and triggers SIGNED_OUT event
       const { error } = await supabase.auth.signOut();
 
       // Dismiss loading toast
@@ -113,12 +116,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         toast.success("Logged out successfully");
       }
 
-      // Force redirect to login page
-      window.location.replace("/admin/login");
+      // Force redirect to login page after ensuring session is cleared
+      setTimeout(() => {
+        window.location.href = "/admin/login";
+      }, 100);
     } catch (error) {
       console.error("Sign out error:", error);
       toast.success("Logged out successfully");
-      window.location.replace("/admin/login");
+      // Force redirect to login page
+      setTimeout(() => {
+        window.location.href = "/admin/login";
+      }, 100);
     }
   };
 

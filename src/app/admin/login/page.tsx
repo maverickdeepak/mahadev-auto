@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
 import Link from "next/link";
@@ -16,8 +15,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 import { Eye, EyeOff, Lock, Mail, Bike } from "lucide-react";
 
 export default function AdminLogin() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+  const { loading } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -94,12 +92,6 @@ export default function AdminLogin() {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!loading && user) {
-      router.replace("/admin/bike-store");
-    }
-  }, [user, loading, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
