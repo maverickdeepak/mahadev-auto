@@ -6,6 +6,11 @@ import { Toaster } from "react-hot-toast";
 export const metadata: Metadata = {
   title: "Mahadev Automobiles",
   description: "Mahadev Automobiles",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
