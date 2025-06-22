@@ -13,6 +13,14 @@ const Header = () => {
     setIsMenuOpen(false);
   };
 
+  const scrollToSection = (sectionId: string) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+    closeMenu();
+  };
+
   return (
     <nav className="bg-white shadow-sm border-b relative md:relative sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,30 +34,30 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-8">
-            <a
-              href="#home"
-              className="text-gray-700 hover:text-blue-600 transition-colors"
+            <button
+              onClick={() => scrollToSection("home")}
+              className="text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
             >
               Home
-            </a>
-            <a
-              href="#services"
-              className="text-gray-700 hover:text-blue-600 transition-colors"
+            </button>
+            <button
+              onClick={() => scrollToSection("services")}
+              className="text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
             >
               Services
-            </a>
-            <a
-              href="#about"
-              className="text-gray-700 hover:text-blue-600 transition-colors"
+            </button>
+            <button
+              onClick={() => scrollToSection("about")}
+              className="text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
             >
               About
-            </a>
-            <a
-              href="#contact"
-              className="text-gray-700 hover:text-blue-600 transition-colors"
+            </button>
+            <button
+              onClick={() => scrollToSection("contact")}
+              className="text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
             >
               Contact
-            </a>
+            </button>
           </div>
 
           {/* Desktop Phone */}
@@ -88,39 +96,38 @@ const Header = () => {
           } overflow-hidden`}
         >
           <div className="py-4 space-y-4 border-t border-gray-200">
-            <a
-              href="#home"
-              onClick={closeMenu}
-              className="block text-gray-700 hover:text-blue-600 transition-colors py-2"
+            <button
+              onClick={() => scrollToSection("home")}
+              className="block text-gray-700 hover:text-blue-600 transition-colors py-2 w-full text-left"
             >
               Home
-            </a>
-            <a
-              href="#services"
-              onClick={closeMenu}
-              className="block text-gray-700 hover:text-blue-600 transition-colors py-2"
+            </button>
+            <button
+              onClick={() => scrollToSection("services")}
+              className="block text-gray-700 hover:text-blue-600 transition-colors py-2 w-full text-left"
             >
               Services
-            </a>
-            <a
-              href="#about"
-              onClick={closeMenu}
-              className="block text-gray-700 hover:text-blue-600 transition-colors py-2"
+            </button>
+            <button
+              onClick={() => scrollToSection("about")}
+              className="block text-gray-700 hover:text-blue-600 transition-colors py-2 w-full text-left"
             >
               About
-            </a>
-            <a
-              href="#contact"
-              onClick={closeMenu}
-              className="block text-gray-700 hover:text-blue-600 transition-colors py-2"
+            </button>
+            <button
+              onClick={() => scrollToSection("contact")}
+              className="block text-gray-700 hover:text-blue-600 transition-colors py-2 w-full text-left"
             >
               Contact
-            </a>
+            </button>
             <div className="flex items-center space-x-4 pt-4 border-t border-gray-200">
               <Phone className="h-5 w-5 text-blue-600" />
-              <span className="text-sm font-medium text-gray-700">
-                (555) 123-4567
-              </span>
+              <a
+                href="tel:+918350902050"
+                className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                +91 83509-02050
+              </a>
             </div>
           </div>
         </div>

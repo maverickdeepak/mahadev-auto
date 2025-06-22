@@ -1,7 +1,16 @@
+"use client";
+
 import { Award, Clock, Users, Wrench } from "lucide-react";
 import React from "react";
 
 const HeroSection = () => {
+  const scrollToServices = () => {
+    const servicesSection = document.getElementById("services");
+    if (servicesSection) {
+      servicesSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <section
       id="home"
@@ -11,20 +20,39 @@ const HeroSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Expert Bike Repair & Maintenance
+              Expert Bike Repair & Maintenance in Sataun, Sirmour
             </h1>
             <p className="text-xl mb-8 text-blue-100">
-              Professional bike repair services with over 7 years of experience.
-              We fix all types of bicycles with quality parts and expert
-              craftsmanship.
+              Professional bike repair services in Sataun, District Sirmour,
+              Himachal Pradesh with over 7 years of experience. Owned by Sunil
+              Tomar (Chottu), we fix all types of bicycles with quality parts
+              and expert craftsmanship. Same-day repairs available for emergency
+              bike service.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+              <a
+                href="tel:+918350902050"
+                className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300 text-center"
+                aria-label="Call Mahadev Automobiles for bike repair appointment"
+              >
                 Book Appointment
-              </button>
-              <button className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition duration-300">
+              </a>
+              <button
+                onClick={scrollToServices}
+                className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition duration-300"
+                aria-label="View our bike repair services"
+              >
                 View Services
               </button>
+            </div>
+            <div className="mt-6 text-sm text-blue-100">
+              <p>
+                📍 Located at Main Bus Stand, Sataun, District Sirmour, Himachal
+                Pradesh 173029
+              </p>
+              <p>👨‍🔧 Owner: Sunil Tomar (Chottu)</p>
+              <p>📞 Call us: +91 83509-02050</p>
+              <p>⏰ Open: Monday-Saturday 9AM-8PM, Sunday 9AM-6PM</p>
             </div>
           </div>
           <div className="relative">
@@ -36,7 +64,7 @@ const HeroSection = () => {
                   </div>
                   <h3 className="font-semibold mb-2">Expert Repairs</h3>
                   <p className="text-sm text-blue-100">
-                    Professional bike mechanics
+                    Professional bike mechanics in Sataun
                   </p>
                 </div>
                 <div className="text-center">
@@ -45,7 +73,7 @@ const HeroSection = () => {
                   </div>
                   <h3 className="font-semibold mb-2">Quick Service</h3>
                   <p className="text-sm text-blue-100">
-                    Same day repairs available
+                    Same day bike repairs available
                   </p>
                 </div>
                 <div className="text-center">
@@ -54,7 +82,7 @@ const HeroSection = () => {
                   </div>
                   <h3 className="font-semibold mb-2">Quality Parts</h3>
                   <p className="text-sm text-blue-100">
-                    Premium components only
+                    Premium bike components only
                   </p>
                 </div>
                 <div className="text-center">
@@ -63,7 +91,7 @@ const HeroSection = () => {
                   </div>
                   <h3 className="font-semibold mb-2">Customer First</h3>
                   <p className="text-sm text-blue-100">
-                    Satisfaction guaranteed
+                    Satisfaction guaranteed in Sirmour
                   </p>
                 </div>
               </div>
