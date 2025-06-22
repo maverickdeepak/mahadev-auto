@@ -27,6 +27,7 @@ import {
   Clock as LucideClock,
   Search,
   LogOut,
+  BarChart3,
 } from "lucide-react";
 
 interface BikeServiceItem {
@@ -47,6 +48,15 @@ interface BikeRecord {
   serviceStartDate: string;
   deliveryDate: string;
   serviceStatus: string;
+  // Payment tracking fields
+  amountPaid?: number;
+  pendingAmount?: number;
+  paymentHistory?: Array<{
+    id: string;
+    amount: number;
+    date: string;
+    notes?: string;
+  }>;
 }
 
 const BikeStorepage = () => {
@@ -64,6 +74,9 @@ const BikeStorepage = () => {
     serviceStartDate: new Date().toISOString().split("T")[0],
     deliveryDate: "",
     serviceStatus: "",
+    amountPaid: 0,
+    pendingAmount: 0,
+    paymentHistory: [],
   });
 
   const [newItem, setNewItem] = useState({ itemName: "", itemCost: 0 });
@@ -243,6 +256,9 @@ const BikeStorepage = () => {
         serviceStartDate: new Date().toISOString().split("T")[0],
         deliveryDate: "",
         serviceStatus: "",
+        amountPaid: 0,
+        pendingAmount: 0,
+        paymentHistory: [],
       });
       // show toast only if data is inserted
       if (!error) {
@@ -298,13 +314,22 @@ const BikeStorepage = () => {
 
             {/* Navigation Link */}
             <div className="flex justify-center">
-              <Link
-                href="/admin/service-store"
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
-              >
-                <Search className="h-4 w-4" />
-                Search Bike Records
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/admin/service-store"
+                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+                >
+                  <Search className="h-4 w-4" />
+                  Search Bike Records
+                </Link>
+                <Link
+                  href="/admin/analytics"
+                  className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  View Analytics
+                </Link>
+              </div>
             </div>
           </div>
 
