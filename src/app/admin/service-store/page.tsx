@@ -58,6 +58,7 @@ interface ServiceRecord {
     amount: number;
     date: string;
     notes?: string;
+    paymentMethod?: string;
   }>;
 }
 
@@ -84,12 +85,28 @@ const ServicePage = () => {
   );
 
   // Payment tracking state
-  const [newPayment, setNewPayment] = useState({ amount: 0, notes: "" });
+  const [newPayment, setNewPayment] = useState({
+    amount: 0,
+    notes: "",
+    paymentMethod: "Cash",
+  });
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentDialogType, setPaymentDialogType] = useState<
     "delivery" | "removeItem" | "payment"
   >("delivery");
+
+  // Payment method options
+  const paymentMethods = [
+    "Cash",
+    "UPI",
+    "Bank Transfer",
+    "Credit Card",
+    "Debit Card",
+    "Cheque",
+    "Digital Wallet",
+    "Other",
+  ];
 
   const handleSearch = async () => {
     if (!bikeNumber.trim()) return;
@@ -140,6 +157,7 @@ const ServicePage = () => {
           amount: number;
           date: string;
           notes?: string;
+          paymentMethod?: string;
         }> = [];
         try {
           parsedPaymentHistory = JSON.parse(record.paymentHistory || "[]");
@@ -655,6 +673,7 @@ const ServicePage = () => {
         amount: newPayment.amount,
         date: new Date().toISOString(),
         notes: newPayment.notes || "",
+        paymentMethod: newPayment.paymentMethod,
       };
 
       const currentPaymentHistory = searchResult.paymentHistory || [];
@@ -691,7 +710,7 @@ const ServicePage = () => {
           )
         );
 
-        setNewPayment({ amount: 0, notes: "" });
+        setNewPayment({ amount: 0, notes: "", paymentMethod: "Cash" });
         setShowPaymentForm(false);
         toast.success(
           `Payment of ₹${newPayment.amount.toFixed(2)} recorded successfully`
@@ -1230,15 +1249,21 @@ const ServicePage = () => {
                     Payment Tracking
                   </h3>
                   <div className="flex gap-2">
-                    {searchResult.serviceStatus !== "Delivered" && (
-                      <button
-                        onClick={() => setShowPaymentForm(!showPaymentForm)}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg text-sm font-medium transition duration-200 flex items-center gap-1"
-                      >
-                        <Plus className="h-4 w-4" />
-                        {showPaymentForm ? "Cancel" : "Add Payment"}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setShowPaymentForm(!showPaymentForm)}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition duration-200 flex items-center gap-1 ${
+                        searchResult.serviceStatus === "Delivered"
+                          ? "bg-orange-600 hover:bg-orange-700 text-white"
+                          : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                      }`}
+                    >
+                      <Plus className="h-4 w-4" />
+                      {showPaymentForm
+                        ? "Cancel"
+                        : searchResult.serviceStatus === "Delivered"
+                        ? "Record Payment"
+                        : "Add Payment"}
+                    </button>
                     <button
                       onClick={recalculatePayment}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm font-medium transition duration-200 flex items-center gap-1"
@@ -1292,67 +1317,87 @@ const ServicePage = () => {
                   </div>
 
                   {/* Add Payment Form */}
-                  {showPaymentForm &&
-                    searchResult.serviceStatus !== "Delivered" && (
-                      <div className="bg-white rounded-lg p-4 border-2 border-emerald-200">
-                        <h4 className="font-medium text-gray-900 mb-3">
-                          Record New Payment
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          <div>
-                            <input
-                              type="number"
-                              placeholder="Payment Amount (₹)"
-                              step="0.01"
-                              value={newPayment.amount}
-                              onChange={(e) =>
-                                setNewPayment((prev) => ({
-                                  ...prev,
-                                  amount: parseFloat(e.target.value) || 0,
-                                }))
-                              }
-                              className="block w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <input
-                              type="text"
-                              placeholder="Notes (optional)"
-                              value={newPayment.notes}
-                              onChange={(e) =>
-                                setNewPayment((prev) => ({
-                                  ...prev,
-                                  notes: e.target.value,
-                                }))
-                              }
-                              className="block w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <button
-                              type="button"
-                              onClick={addPayment}
-                              disabled={
-                                isAddingPayment || newPayment.amount <= 0
-                              }
-                              className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg font-medium transition duration-200 flex items-center justify-center gap-1 text-sm"
-                            >
-                              {isAddingPayment ? (
-                                <>
-                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                                  Recording...
-                                </>
-                              ) : (
-                                <>
-                                  <Plus className="h-3 w-3" />
-                                  Record Payment
-                                </>
-                              )}
-                            </button>
-                          </div>
+                  {showPaymentForm && (
+                    <div className="bg-white rounded-lg p-4 border-2 border-emerald-200">
+                      <h4 className="font-medium text-gray-900 mb-3">
+                        Record New Payment
+                        {searchResult.serviceStatus === "Delivered" && (
+                          <span className="ml-2 text-sm bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                            Post-Delivery Payment
+                          </span>
+                        )}
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div>
+                          <input
+                            type="number"
+                            placeholder="Payment Amount (₹)"
+                            step="0.01"
+                            value={newPayment.amount}
+                            onChange={(e) =>
+                              setNewPayment((prev) => ({
+                                ...prev,
+                                amount: parseFloat(e.target.value) || 0,
+                              }))
+                            }
+                            className="block w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="Notes (optional)"
+                            value={newPayment.notes}
+                            onChange={(e) =>
+                              setNewPayment((prev) => ({
+                                ...prev,
+                                notes: e.target.value,
+                              }))
+                            }
+                            className="block w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <select
+                            value={newPayment.paymentMethod}
+                            onChange={(e) =>
+                              setNewPayment((prev) => ({
+                                ...prev,
+                                paymentMethod: e.target.value,
+                              }))
+                            }
+                            className="block w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500 text-sm"
+                          >
+                            {paymentMethods.map((method) => (
+                              <option key={method} value={method}>
+                                {method}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <button
+                            type="button"
+                            onClick={addPayment}
+                            disabled={isAddingPayment || newPayment.amount <= 0}
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white px-3 py-2 rounded-lg font-medium transition duration-200 flex items-center justify-center gap-1 text-sm"
+                          >
+                            {isAddingPayment ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                                Recording...
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="h-3 w-3" />
+                                Record Payment
+                              </>
+                            )}
+                          </button>
                         </div>
                       </div>
-                    )}
+                    </div>
+                  )}
 
                   {/* Payment History */}
                   {searchResult.paymentHistory &&
@@ -1363,44 +1408,95 @@ const ServicePage = () => {
                         </label>
                         <div className="space-y-2 max-h-40 overflow-y-auto">
                           {Array.isArray(searchResult.paymentHistory) &&
-                            searchResult.paymentHistory.map((payment) => (
-                              <div
-                                key={payment.id}
-                                className="flex justify-between items-center bg-white rounded-lg p-3 border border-emerald-200"
-                              >
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-gray-900 font-medium">
-                                      ₹{payment.amount.toFixed(2)}
-                                    </span>
-                                    {payment.notes && (
-                                      <span className="text-sm text-gray-600">
-                                        - {payment.notes}
+                            searchResult.paymentHistory.map((payment) => {
+                              // Check if payment was made after delivery
+                              const paymentDate = new Date(payment.date);
+                              const deliveryDate = searchResult.deliveryDate
+                                ? new Date(searchResult.deliveryDate)
+                                : null;
+                              const isPostDeliveryPayment =
+                                deliveryDate && paymentDate > deliveryDate;
+
+                              return (
+                                <div
+                                  key={payment.id}
+                                  className="flex justify-between items-center bg-white rounded-lg p-3 border border-emerald-200"
+                                >
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-gray-900 font-medium">
+                                        ₹{payment.amount.toFixed(2)}
                                       </span>
-                                    )}
+                                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                        {payment.paymentMethod || "Cash"}
+                                      </span>
+                                      {isPostDeliveryPayment && (
+                                        <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                                          Post-Delivery
+                                        </span>
+                                      )}
+                                      {payment.notes && (
+                                        <span className="text-sm text-gray-600">
+                                          - {payment.notes}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                      {formatDateTime(payment.date)}
+                                    </p>
                                   </div>
-                                  <p className="text-xs text-gray-500">
-                                    {formatDateTime(payment.date)}
-                                  </p>
+                                  <span className="text-green-600 font-medium">
+                                    ✓ Paid
+                                  </span>
                                 </div>
-                                <span className="text-green-600 font-medium">
-                                  ✓ Paid
-                                </span>
-                              </div>
-                            ))}
+                              );
+                            })}
                         </div>
                       </div>
                     )}
 
                   {/* Payment Status Alert */}
                   {(searchResult.pendingAmount || 0) > 0 && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <div
+                      className={`rounded-lg p-3 ${
+                        searchResult.serviceStatus === "Delivered"
+                          ? "bg-orange-50 border border-orange-200"
+                          : "bg-yellow-50 border border-yellow-200"
+                      }`}
+                    >
                       <div className="flex items-center gap-2">
-                        <span className="text-yellow-600">⚠️</span>
-                        <span className="text-sm text-yellow-800">
-                          <strong>Pending Payment:</strong> ₹
-                          {(searchResult.pendingAmount || 0).toFixed(2)}{" "}
+                        <span
+                          className={
+                            searchResult.serviceStatus === "Delivered"
+                              ? "text-orange-600"
+                              : "text-yellow-600"
+                          }
+                        >
+                          {searchResult.serviceStatus === "Delivered"
+                            ? "💰"
+                            : "⚠️"}
+                        </span>
+                        <span
+                          className={`text-sm ${
+                            searchResult.serviceStatus === "Delivered"
+                              ? "text-orange-800"
+                              : "text-yellow-800"
+                          }`}
+                        >
+                          <strong>
+                            {searchResult.serviceStatus === "Delivered"
+                              ? "Outstanding Balance:"
+                              : "Pending Payment:"}
+                          </strong>{" "}
+                          ₹{(searchResult.pendingAmount || 0).toFixed(2)}{" "}
                           remaining
+                          {searchResult.serviceStatus === "Delivered" && (
+                            <span className="block text-xs mt-1">
+                              Service delivered on{" "}
+                              {formatDateTime(searchResult.deliveryDate)}.
+                              Customer can pay remaining amount anytime.
+                            </span>
+                          )}
                         </span>
                       </div>
                     </div>

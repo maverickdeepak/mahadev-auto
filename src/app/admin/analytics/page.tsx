@@ -8,6 +8,10 @@ import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
 import { formatDateTime } from "../../utils/dateUtils";
 import Clock from "../../components/Clock";
+import {
+  processAnalyticsData,
+  ServiceRecord,
+} from "../../utils/analyticsUtils";
 
 import {
   BarChart3,
@@ -76,105 +80,9 @@ const AnalyticsPage = () => {
         return;
       }
 
-      // Process the data
-      const totalServices = records.length;
-      const totalRevenue = records.reduce(
-        (sum: number, record: any) => sum + (record.totalCost || 0),
-        0
-      );
-      const uniqueCustomers = new Set(records.map((r: any) => r.bikeNumber))
-        .size;
-      const pendingServices = records.filter(
-        (r: any) => r.serviceStatus === "Pending"
-      ).length;
-      const completedServices = records.filter(
-        (r: any) => r.serviceStatus === "Delivered"
-      ).length;
-      const totalPendingAmount = records.reduce(
-        (sum: number, record: any) => sum + (record.pendingAmount || 0),
-        0
-      );
-
-      // Service type breakdown
-      const serviceTypeCount = records.reduce((acc: any, record: any) => {
-        const type = record.serviceType || "Unknown";
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      }, {});
-
-      const serviceTypeBreakdown = Object.entries(serviceTypeCount)
-        .map(([type, count]: [string, any]) => ({
-          serviceType: type,
-          count,
-          revenue: records
-            .filter((r: any) => r.serviceType === type)
-            .reduce((sum: number, r: any) => sum + (r.totalCost || 0), 0),
-          percentage: (count / totalServices) * 100,
-        }))
-        .sort((a: any, b: any) => b.count - a.count);
-
-      // Customer analytics
-      const customerVisits = records.reduce((acc: any, record: any) => {
-        const bikeNumber = record.bikeNumber;
-        if (!acc[bikeNumber]) {
-          acc[bikeNumber] = {
-            customerName: record.userName,
-            bikeNumber,
-            visits: 0,
-            totalSpent: 0,
-            lastVisit: record.created_at,
-          };
-        }
-        acc[bikeNumber].visits++;
-        acc[bikeNumber].totalSpent += record.totalCost || 0;
-        return acc;
-      }, {});
-
-      const repeatCustomers = Object.values(customerVisits).filter(
-        (customer: any) => customer.visits > 1
-      ).length;
-      const customerRetentionRate =
-        uniqueCustomers > 0 ? (repeatCustomers / uniqueCustomers) * 100 : 0;
-
-      const topCustomers = Object.values(customerVisits)
-        .sort((a: any, b: any) => b.totalSpent - a.totalSpent)
-        .slice(0, 5);
-
-      // Performance metrics
-      const statusDistribution = {
-        pending: records.filter((r: any) => r.serviceStatus === "Pending")
-          .length,
-        inProgress: records.filter(
-          (r: any) => r.serviceStatus === "In Progress"
-        ).length,
-        done: records.filter((r: any) => r.serviceStatus === "Done").length,
-        delivered: records.filter((r: any) => r.serviceStatus === "Delivered")
-          .length,
-      };
-
-      setAnalyticsData({
-        overview: {
-          totalServices,
-          totalRevenue,
-          totalCustomers: uniqueCustomers,
-          pendingServices,
-          completedServices,
-          totalPendingAmount,
-        },
-        serviceAnalytics: {
-          serviceTypeBreakdown,
-        },
-        customerAnalytics: {
-          totalCustomers: uniqueCustomers,
-          repeatCustomers,
-          newCustomers: uniqueCustomers - repeatCustomers,
-          customerRetentionRate,
-          topCustomers,
-        },
-        performanceMetrics: {
-          statusDistribution,
-        },
-      });
+      // Process the data using the analytics utils function
+      const processedData = processAnalyticsData(records as ServiceRecord[]);
+      setAnalyticsData(processedData);
     } catch (error) {
       console.error("Error fetching analytics:", error);
       toast.error("Error loading analytics data");
@@ -567,6 +475,100 @@ const AnalyticsPage = () => {
                   </div>
                 </ChartCard>
 
+                <ChartCard title="Payment Methods">
+                  <div className="space-y-3">
+                    {analyticsData?.revenueAnalytics?.paymentMethods?.length >
+                    0 ? (
+                      analyticsData.revenueAnalytics.paymentMethods.map(
+                        (
+                          method: {
+                            method: string;
+                            count: number;
+                            amount: number;
+                            percentage: number;
+                          },
+                          index: number
+                        ) => (
+                          <div
+                            key={method.method}
+                            className="flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-3 h-3 rounded-full ${
+                                  index === 0
+                                    ? "bg-green-500"
+                                    : index === 1
+                                    ? "bg-blue-500"
+                                    : index === 2
+                                    ? "bg-purple-500"
+                                    : index === 3
+                                    ? "bg-yellow-500"
+                                    : "bg-gray-500"
+                                }`}
+                              ></div>
+                              <span className="text-sm font-medium text-gray-700">
+                                {method.method}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-bold text-gray-900">
+                                ₹{method.amount.toLocaleString()}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {method.count} payments (
+                                {method.percentage.toFixed(1)}%)
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      )
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-sm text-gray-500">
+                          No payment data available yet
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Post-Delivery Payments Summary */}
+                    {analyticsData?.revenueAnalytics?.postDeliveryPayments && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="bg-orange-50 rounded-lg p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-orange-600">💰</span>
+                              <span className="text-sm font-medium text-orange-800">
+                                Post-Delivery Payments
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-bold text-orange-900">
+                                ₹
+                                {analyticsData.revenueAnalytics.postDeliveryPayments.amount.toLocaleString()}
+                              </p>
+                              <p className="text-xs text-orange-700">
+                                {
+                                  analyticsData.revenueAnalytics
+                                    .postDeliveryPayments.count
+                                }{" "}
+                                payments (
+                                {analyticsData.revenueAnalytics.postDeliveryPayments.percentage.toFixed(
+                                  1
+                                )}
+                                %)
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </ChartCard>
+              </div>
+
+              {/* Customer Analytics */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <ChartCard title="Customer Insights">
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">

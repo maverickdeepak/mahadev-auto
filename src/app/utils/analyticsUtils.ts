@@ -26,6 +26,7 @@ export interface ServiceRecord {
     amount: number;
     date: string;
     notes?: string;
+    paymentMethod?: string;
   }>;
   created_at: string;
 }
@@ -65,6 +66,17 @@ export interface AnalyticsData {
       paid: number;
       pending: number;
       total: number;
+    };
+    paymentMethods: Array<{
+      method: string;
+      count: number;
+      amount: number;
+      percentage: number;
+    }>;
+    postDeliveryPayments: {
+      count: number;
+      amount: number;
+      percentage: number;
     };
   };
   customerAnalytics: {
@@ -176,6 +188,63 @@ export const processAnalyticsData = (
     0
   );
 
+  // Payment method analytics
+  const paymentMethodData = records.reduce((acc, record) => {
+    if (record.paymentHistory && Array.isArray(record.paymentHistory)) {
+      record.paymentHistory.forEach((payment) => {
+        const method = payment.paymentMethod || "Cash";
+        if (!acc[method]) {
+          acc[method] = { count: 0, amount: 0 };
+        }
+        acc[method].count++;
+        acc[method].amount += payment.amount;
+      });
+    }
+    return acc;
+  }, {} as Record<string, { count: number; amount: number }>);
+
+  const totalPaymentCount = Object.values(paymentMethodData).reduce(
+    (sum, data) => sum + data.count,
+    0
+  );
+
+  const paymentMethods = Object.entries(paymentMethodData)
+    .map(([method, data]) => ({
+      method,
+      count: data.count,
+      amount: data.amount,
+      percentage:
+        totalPaymentCount > 0 ? (data.count / totalPaymentCount) * 100 : 0,
+    }))
+    .sort((a, b) => b.amount - a.amount);
+
+  // Post-delivery payment analytics
+  const postDeliveryPayments = records.reduce(
+    (acc, record) => {
+      if (
+        record.paymentHistory &&
+        Array.isArray(record.paymentHistory) &&
+        record.deliveryDate
+      ) {
+        const deliveryDate = new Date(record.deliveryDate);
+        record.paymentHistory.forEach((payment) => {
+          const paymentDate = new Date(payment.date);
+          if (paymentDate > deliveryDate) {
+            acc.count++;
+            acc.amount += payment.amount;
+          }
+        });
+      }
+      return acc;
+    },
+    { count: 0, amount: 0 }
+  );
+
+  const postDeliveryPercentage =
+    totalPaymentCount > 0
+      ? (postDeliveryPayments.count / totalPaymentCount) * 100
+      : 0;
+
   // Customer analytics
   const customerVisits = records.reduce(
     (acc, record) => {
@@ -258,6 +327,12 @@ export const processAnalyticsData = (
         paid: paidAmount,
         pending: totalPendingAmount,
         total: totalRevenue,
+      },
+      paymentMethods,
+      postDeliveryPayments: {
+        count: postDeliveryPayments.count,
+        amount: postDeliveryPayments.amount,
+        percentage: postDeliveryPercentage,
       },
     },
     customerAnalytics: {

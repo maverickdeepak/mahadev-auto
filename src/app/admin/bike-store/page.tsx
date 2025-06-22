@@ -56,6 +56,7 @@ interface BikeRecord {
     amount: number;
     date: string;
     notes?: string;
+    paymentMethod?: string;
   }>;
 }
 
