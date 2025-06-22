@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 
 interface ServiceRecord {
+  id: number;
   bikeNumber: string;
   customerName: string;
   phone: string;
@@ -85,6 +86,9 @@ const ServicePage = () => {
       query = query.eq("bikeNumber", searchTerm);
     }
 
+    // Order by created_at descending to get most recent records first
+    query = query.order("created_at", { ascending: false });
+
     const { data, error } = await query;
     console.log(data);
     console.log(error);
@@ -105,6 +109,7 @@ const ServicePage = () => {
         }
 
         return {
+          id: record.id,
           bikeNumber: record.bikeNumber,
           customerName: record.userName,
           phone: record.phoneNumber?.toString() || "",
@@ -168,7 +173,7 @@ const ServicePage = () => {
       const { error } = await supabase
         .from("bike_records")
         .update(updateData)
-        .eq("bikeNumber", searchResult.bikeNumber);
+        .eq("id", searchResult.id);
 
       if (!error) {
         // Update local state
@@ -202,7 +207,7 @@ const ServicePage = () => {
         // Update all records to reflect the change
         setAllRecords((prevRecords) =>
           prevRecords.map((record) =>
-            record.bikeNumber === searchResult.bikeNumber
+            record.id === searchResult.id
               ? {
                   ...record,
                   serviceStatus: newStatus,
@@ -248,7 +253,7 @@ const ServicePage = () => {
         const { error } = await supabase
           .from("bike_records")
           .update(updateData)
-          .eq("bikeNumber", searchResult!.bikeNumber);
+          .eq("id", searchResult!.id);
 
         if (!error) {
           // Update local state
@@ -278,7 +283,7 @@ const ServicePage = () => {
           // Update all records to reflect the change
           setAllRecords((prevRecords) =>
             prevRecords.map((record) =>
-              record.bikeNumber === searchResult!.bikeNumber
+              record.id === searchResult!.id
                 ? {
                     ...record,
                     serviceStatus: "Delivered",
@@ -335,10 +340,10 @@ const ServicePage = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6 sm:mb-8">
             <div className="flex justify-between items-center mb-4">
               <div className="flex-1"></div>
               <div className="flex justify-center flex-1">
@@ -373,9 +378,9 @@ const ServicePage = () => {
           </div>
 
           {/* Search Section */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 mb-6 sm:mb-8">
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">
                 Search Bike Service
               </h2>
 
@@ -436,8 +441,8 @@ const ServicePage = () => {
 
           {/* Results Section */}
           {searchResult && (
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
                 Service Details
               </h2>
 
@@ -447,43 +452,45 @@ const ServicePage = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Service History ({allRecords.length} visits)
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {allRecords.map((record, index) => (
                       <button
-                        key={index}
+                        key={record.id}
                         onClick={() => {
                           setSelectedRecord(record);
                           setSearchResult(record);
                         }}
-                        className={`p-3 rounded-lg border-2 transition-all ${
-                          selectedRecord === record
-                            ? "border-blue-500 bg-blue-50"
-                            : "border-gray-200 bg-white hover:border-gray-300"
+                        className={`p-3 rounded-lg border-2 transition-all w-full ${
+                          selectedRecord?.id === record.id
+                            ? "border-blue-500 bg-blue-50 shadow-md"
+                            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
                         }`}
                       >
                         <div className="text-left">
-                          <p className="font-medium text-gray-900">
-                            Visit #{allRecords.length - index}
-                          </p>
-                          <p className="text-sm text-gray-600">
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="font-medium text-gray-900 text-sm">
+                              Visit #{allRecords.length - index}
+                            </p>
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                record.serviceStatus === "Pending"
+                                  ? "bg-gray-100 text-gray-800"
+                                  : record.serviceStatus === "In Progress"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : record.serviceStatus === "Done"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-blue-100 text-blue-800"
+                              }`}
+                            >
+                              {record.serviceStatus}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-1">
                             {record.serviceType}
                           </p>
                           <p className="text-xs text-gray-500">
                             {formatDateTime(record.serviceStartDate)}
                           </p>
-                          <span
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
-                              record.serviceStatus === "Pending"
-                                ? "bg-gray-100 text-gray-800"
-                                : record.serviceStatus === "In Progress"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : record.serviceStatus === "Done"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-blue-100 text-blue-800"
-                            }`}
-                          >
-                            {record.serviceStatus}
-                          </span>
                         </div>
                       </button>
                     ))}
@@ -491,7 +498,7 @@ const ServicePage = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                 {/* Customer Information */}
                 <div className="space-y-6">
                   <div className="bg-blue-50 rounded-xl p-6">
@@ -679,13 +686,13 @@ const ServicePage = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                 <button
                   onClick={() => updateServiceStatus("Pending")}
                   disabled={
                     isUpdatingStatus || searchResult.serviceStatus === "Pending"
                   }
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition duration-200 text-sm sm:text-base"
                 >
                   {isUpdatingStatus ? (
                     <>
@@ -702,7 +709,7 @@ const ServicePage = () => {
                     isUpdatingStatus ||
                     searchResult.serviceStatus === "In Progress"
                   }
-                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition duration-200 text-sm sm:text-base"
                 >
                   {isUpdatingStatus ? (
                     <>
@@ -718,7 +725,7 @@ const ServicePage = () => {
                   disabled={
                     isUpdatingStatus || searchResult.serviceStatus === "Done"
                   }
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition duration-200 text-sm sm:text-base"
                 >
                   {isUpdatingStatus ? (
                     <>
@@ -735,7 +742,7 @@ const ServicePage = () => {
                     isUpdatingStatus ||
                     searchResult.serviceStatus === "Delivered"
                   }
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition duration-200 text-sm sm:text-base"
                 >
                   {isUpdatingStatus ? (
                     <>
