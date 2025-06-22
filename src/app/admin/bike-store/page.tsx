@@ -211,7 +211,7 @@ const BikeStorepage = () => {
         serviceStatus: "",
       });
       // show toast only if data is inserted
-      if (data && !error) {
+      if (!error) {
         toast.success("Bike information saved successfully!");
       } else {
         toast.error("Error saving bike information. Please try again.");
