@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -96,7 +97,7 @@ export default function AdminLogin() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push("/admin/bike-store");
+      router.replace("/admin/bike-store");
     }
   }, [user, loading, router]);
 
@@ -109,6 +110,15 @@ export default function AdminLogin() {
         </div>
       ) : (
         <div className="max-w-md w-full space-y-8">
+          {/* Brand Link */}
+          <div className="text-center mb-2">
+            <Link
+              href="/"
+              className="text-2xl font-bold text-blue-700 hover:text-blue-900 transition-colors duration-200"
+            >
+              Mahadev Automobiles
+            </Link>
+          </div>
           {/* Header */}
           <div className="text-center">
             <div className="flex justify-center mb-4">
@@ -153,7 +163,7 @@ export default function AdminLogin() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900 placeholder-gray-600 ${
                       errors.email
                         ? "border-red-300 focus:ring-red-500"
                         : "border-gray-300"
@@ -186,7 +196,7 @@ export default function AdminLogin() {
                     required
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ${
+                    className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900 placeholder-gray-600 ${
                       errors.password
                         ? "border-red-300 focus:ring-red-500"
                         : "border-gray-300"
@@ -281,7 +291,10 @@ export default function AdminLogin() {
 
           {/* Footer */}
           <div className="text-center text-sm text-gray-500">
-            <p>&copy; 2025 Mahadev Automobiles. All rights reserved.</p>
+            <p>
+              &copy; {new Date().getFullYear()} Mahadev Automobiles. All rights
+              reserved.
+            </p>
           </div>
         </div>
       )}

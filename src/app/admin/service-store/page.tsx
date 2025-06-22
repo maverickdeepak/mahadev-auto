@@ -7,6 +7,10 @@ import Link from "next/link";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
+import { formatDateTime } from "../../utils/dateUtils";
+import Clock from "../../components/Clock";
+import ConfirmDialog from "../../components/ConfirmDialog";
+// import { sendMockSMS } from "../../utils/smsUtils";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -17,7 +21,7 @@ import {
   Search,
   Bike,
   Wrench,
-  Clock,
+  Clock as LucideClock,
   User,
   Phone,
   MapPin,
@@ -57,6 +61,8 @@ const ServicePage = () => {
   const [selectedRecord, setSelectedRecord] = useState<ServiceRecord | null>(
     null
   );
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string>("");
 
   const handleSearch = async () => {
     if (!bikeNumber.trim()) return;
@@ -138,20 +144,85 @@ const ServicePage = () => {
   const updateServiceStatus = async (newStatus: string) => {
     if (!searchResult) return;
 
+    // Ask for confirmation when marking as delivered
+    if (newStatus === "Delivered") {
+      setShowConfirmDialog(true);
+      setPendingStatus(newStatus);
+      return;
+    }
+
+    // For other statuses, update directly
     setIsUpdatingStatus(true);
 
     try {
+      // Prepare update data
+      const updateData: { serviceStatus: string; deliveryDate?: string } = {
+        serviceStatus: newStatus,
+      };
+
+      // If status is being changed to "Delivered", update the delivery date to current date and time
+      if (newStatus === "Delivered") {
+        updateData.deliveryDate = new Date().toISOString();
+      }
+
       const { error } = await supabase
         .from("bike_records")
-        .update({ serviceStatus: newStatus })
+        .update(updateData)
         .eq("bikeNumber", searchResult.bikeNumber);
 
       if (!error) {
         // Update local state
-        setSearchResult((prev) =>
-          prev ? { ...prev, serviceStatus: newStatus } : null
+        setSearchResult((prev) => {
+          if (!prev) return null;
+
+          const updatedRecord = { ...prev, serviceStatus: newStatus };
+
+          // Update delivery date if status is "Delivered"
+          if (newStatus === "Delivered") {
+            updatedRecord.deliveryDate = new Date().toISOString();
+          }
+
+          return updatedRecord;
+        });
+
+        // Also update the selected record in the history
+        setSelectedRecord((prev) => {
+          if (!prev) return null;
+
+          const updatedRecord = { ...prev, serviceStatus: newStatus };
+
+          // Update delivery date if status is "Delivered"
+          if (newStatus === "Delivered") {
+            updatedRecord.deliveryDate = new Date().toISOString();
+          }
+
+          return updatedRecord;
+        });
+
+        // Update all records to reflect the change
+        setAllRecords((prevRecords) =>
+          prevRecords.map((record) =>
+            record.bikeNumber === searchResult.bikeNumber
+              ? {
+                  ...record,
+                  serviceStatus: newStatus,
+                  ...(newStatus === "Delivered" && {
+                    deliveryDate: new Date().toISOString(),
+                  }),
+                }
+              : record
+          )
         );
-        toast.success(`Service status updated to: ${newStatus}`);
+
+        if (newStatus === "Delivered") {
+          toast.success(
+            `Service delivered! Delivery date updated to ${formatDateTime(
+              new Date().toISOString()
+            )}`
+          );
+        } else {
+          toast.success(`Service status updated to: ${newStatus}`);
+        }
       } else {
         toast.error("Error updating service status. Please try again.");
       }
@@ -160,6 +231,105 @@ const ServicePage = () => {
       toast.error("Error updating service status. Please try again.");
     } finally {
       setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleConfirmDelivery = async () => {
+    if (pendingStatus === "Delivered") {
+      setIsUpdatingStatus(true);
+
+      try {
+        // Prepare update data
+        const updateData: { serviceStatus: string; deliveryDate?: string } = {
+          serviceStatus: "Delivered",
+          deliveryDate: new Date().toISOString(),
+        };
+
+        const { error } = await supabase
+          .from("bike_records")
+          .update(updateData)
+          .eq("bikeNumber", searchResult!.bikeNumber);
+
+        if (!error) {
+          // Update local state
+          setSearchResult((prev) => {
+            if (!prev) return null;
+
+            const updatedRecord = {
+              ...prev,
+              serviceStatus: "Delivered",
+              deliveryDate: new Date().toISOString(),
+            };
+            return updatedRecord;
+          });
+
+          // Also update the selected record in the history
+          setSelectedRecord((prev) => {
+            if (!prev) return null;
+
+            const updatedRecord = {
+              ...prev,
+              serviceStatus: "Delivered",
+              deliveryDate: new Date().toISOString(),
+            };
+            return updatedRecord;
+          });
+
+          // Update all records to reflect the change
+          setAllRecords((prevRecords) =>
+            prevRecords.map((record) =>
+              record.bikeNumber === searchResult!.bikeNumber
+                ? {
+                    ...record,
+                    serviceStatus: "Delivered",
+                    deliveryDate: new Date().toISOString(),
+                  }
+                : record
+            )
+          );
+
+          // Send SMS notification to customer
+          // try {
+          //   // Use mock SMS for testing (replace with sendDeliverySMS for production)
+          //   const smsResult = await sendMockSMS(
+          //     searchResult!.phone,
+          //     searchResult!.customerName,
+          //     searchResult!.bikeNumber,
+          //     searchResult!.serviceType
+          //   );
+
+          //   if (smsResult.success) {
+          //     toast.success(
+          //       `Service delivered! SMS notification sent to ${
+          //         searchResult!.customerName
+          //       }`
+          //     );
+          //   } else {
+          //     toast.success(
+          //       `Service delivered! (SMS failed: ${smsResult.message})`
+          //     );
+          //   }
+          // } catch (smsError) {
+          //   console.error("SMS sending error:", smsError);
+          //   toast.success(`Service delivered! (SMS notification failed)`);
+          // }
+
+          toast.success(
+            `Service delivered! Delivery date updated to ${formatDateTime(
+              new Date().toISOString()
+            )}`
+          );
+        } else {
+          toast.error("Error updating service status. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error updating status:", error);
+        toast.error("Error updating service status. Please try again.");
+      } finally {
+        setIsUpdatingStatus(false);
+        setShowConfirmDialog(false);
+        setPendingStatus("");
+      }
     }
   };
 
@@ -197,6 +367,9 @@ const ServicePage = () => {
                 Logged in as: {user.email}
               </p>
             )}
+            <div className="flex justify-center items-center gap-4 mt-2">
+              <Clock />
+            </div>
           </div>
 
           {/* Search Section */}
@@ -216,7 +389,7 @@ const ServicePage = () => {
                     placeholder="Enter bike number or last 4 digits"
                     value={bikeNumber}
                     onChange={(e) => setBikeNumber(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500"
+                    className="block w-full pl-10 pr-3 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-600"
                     onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                   />
                 </div>
@@ -296,9 +469,7 @@ const ServicePage = () => {
                             {record.serviceType}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {new Date(
-                              record.serviceStartDate
-                            ).toLocaleDateString()}
+                            {formatDateTime(record.serviceStartDate)}
                           </p>
                           <span
                             className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
@@ -425,7 +596,7 @@ const ServicePage = () => {
 
                   <div className="bg-orange-50 rounded-xl p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-orange-600" />
+                      <LucideClock className="h-5 w-5 text-orange-600" />
                       Service Timeline
                     </h3>
                     <div className="space-y-3">
@@ -434,15 +605,22 @@ const ServicePage = () => {
                           Service Start Date
                         </label>
                         <p className="text-gray-900 font-medium">
-                          {searchResult.serviceStartDate}
+                          {formatDateTime(searchResult.serviceStartDate)}
                         </p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-600">
-                          Expected Delivery Date
+                          {searchResult.serviceStatus === "Delivered"
+                            ? "Actual Delivery Date"
+                            : "Expected Delivery Date"}
                         </label>
                         <p className="text-gray-900 font-medium">
-                          {searchResult.deliveryDate}
+                          {formatDateTime(searchResult.deliveryDate)}
+                          {searchResult.serviceStatus === "Delivered" && (
+                            <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              ✓ Delivered
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
@@ -587,6 +765,18 @@ const ServicePage = () => {
             </div>
           )}
         </div>
+
+        {/* Confirm Dialog */}
+        <ConfirmDialog
+          isOpen={showConfirmDialog}
+          onClose={() => setShowConfirmDialog(false)}
+          onConfirm={handleConfirmDelivery}
+          title="Confirm Delivery"
+          message="Are you sure you want to mark this service as delivered? This will update the delivery date to the current date and time."
+          confirmText="Mark as Delivered"
+          cancelText="Cancel"
+          type="warning"
+        />
       </div>
     </ProtectedRoute>
   );

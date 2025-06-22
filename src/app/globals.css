@@ -24,3 +24,37 @@ body {
   color: var(--foreground);
   font-family: "Poppins", sans-serif;
 }
+
+/* Global button styles */
+button {
+  cursor: pointer !important;
+}
+
+/* Global input field styles */
+input,
+textarea,
+select {
+  color: #1f2937 !important; /* Dark gray text */
+  background-color: #ffffff !important; /* White background */
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important; /* Medium gray placeholder */
+}
+
+/* Focus states for better accessibility */
+input:focus,
+textarea:focus,
+select:focus {
+  color: #111827 !important; /* Even darker text on focus */
+  background-color: #ffffff !important;
+}
+
+/* Disabled state */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  color: #9ca3af !important; /* Light gray for disabled */
+  background-color: #f3f4f6 !important;
+}

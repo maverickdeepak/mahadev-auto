@@ -5,6 +5,9 @@ import Link from "next/link";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
+import { formatDateTime } from "../../utils/dateUtils";
+import Clock from "../../components/Clock";
+import ConfirmDialog from "../../components/ConfirmDialog";
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -21,7 +24,7 @@ import {
   Save,
   Plus,
   Trash2,
-  Clock,
+  Clock as LucideClock,
   Search,
   LogOut,
 } from "lucide-react";
@@ -58,7 +61,7 @@ const BikeStorepage = () => {
     serviceCost: 0,
     serviceItems: [],
     totalCost: 0,
-    serviceStartDate: "",
+    serviceStartDate: new Date().toISOString().split("T")[0],
     deliveryDate: "",
     serviceStatus: "",
   });
@@ -76,6 +79,8 @@ const BikeStorepage = () => {
     }>
   >([]);
   const [showExistingRecords, setShowExistingRecords] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState<string>("");
 
   const serviceTypes = [
     "Basic Tune-Up",
@@ -85,6 +90,17 @@ const BikeStorepage = () => {
   ];
 
   const serviceStatuses = ["Pending", "In Progress", "Done", "Delivered"];
+
+  // Helper function to set delivery date to a week from service start date
+  const setDefaultDeliveryDate = (serviceStartDate: string) => {
+    if (serviceStartDate) {
+      const startDate = new Date(serviceStartDate);
+      const deliveryDate = new Date(startDate);
+      deliveryDate.setDate(startDate.getDate() + 7); // Add 7 days
+      return deliveryDate.toISOString().split("T")[0];
+    }
+    return "";
+  };
 
   const checkExistingRecords = async (bikeNumber: string) => {
     if (!bikeNumber.trim()) return;
@@ -132,6 +148,16 @@ const BikeStorepage = () => {
           : processedValue,
     }));
 
+    // Auto-set delivery date when service start date changes
+    if (name === "serviceStartDate" && processedValue) {
+      const deliveryDate = setDefaultDeliveryDate(processedValue);
+      setFormData((prev) => ({
+        ...prev,
+        deliveryDate: deliveryDate,
+      }));
+      toast.success(`Delivery date set to ${formatDateTime(deliveryDate)}`);
+    }
+
     // Check for existing records when bike number is entered
     if (name === "bikeNumber" && processedValue.length >= 4) {
       checkExistingRecords(processedValue);
@@ -165,23 +191,31 @@ const BikeStorepage = () => {
   };
 
   const removeServiceItem = (id: string) => {
-    setFormData((prev) => {
-      const removedItem = prev.serviceItems.find((item) => item.id === id);
-      const updatedItems = prev.serviceItems.filter((item) => item.id !== id);
-      const newTotalCost =
-        prev.serviceCost +
-        updatedItems.reduce((sum, item) => sum + item.itemCost, 0);
+    setItemToRemove(id);
+    setShowConfirmDialog(true);
+  };
 
-      if (removedItem) {
-        toast.success(`Removed ${removedItem.itemName}`);
-      }
+  const handleConfirmRemove = async () => {
+    if (itemToRemove) {
+      setFormData((prev) => {
+        const updatedItems = prev.serviceItems.filter(
+          (item) => item.id !== itemToRemove
+        );
+        const newTotalCost =
+          prev.serviceCost +
+          updatedItems.reduce((sum, item) => sum + item.itemCost, 0);
 
-      return {
-        ...prev,
-        serviceItems: updatedItems,
-        totalCost: newTotalCost,
-      };
-    });
+        toast.success(`Removed item with ID ${itemToRemove}`);
+
+        return {
+          ...prev,
+          serviceItems: updatedItems,
+          totalCost: newTotalCost,
+        };
+      });
+      setItemToRemove("");
+      setShowConfirmDialog(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -206,7 +240,7 @@ const BikeStorepage = () => {
         serviceCost: 0,
         serviceItems: [],
         totalCost: 0,
-        serviceStartDate: "",
+        serviceStartDate: new Date().toISOString().split("T")[0],
         deliveryDate: "",
         serviceStatus: "",
       });
@@ -258,6 +292,9 @@ const BikeStorepage = () => {
                 Logged in as: {user.email}
               </p>
             )}
+            <div className="flex justify-center items-center gap-4 mb-4">
+              <Clock />
+            </div>
 
             {/* Navigation Link */}
             <div className="flex justify-center">
@@ -297,7 +334,7 @@ const BikeStorepage = () => {
                       value={formData.bikeNumber}
                       onChange={handleInputChange}
                       placeholder="e.g., HP 17A 1234"
-                      className="block w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500"
+                      className="block w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-600"
                     />
 
                     {/* Existing Records Display */}
@@ -322,9 +359,7 @@ const BikeStorepage = () => {
                                     {record.serviceStatus}
                                   </p>
                                   <p className="text-xs text-gray-500">
-                                    {new Date(
-                                      record.created_at
-                                    ).toLocaleDateString()}
+                                    {formatDateTime(record.created_at)}
                                   </p>
                                 </div>
                                 <span
@@ -425,7 +460,7 @@ const BikeStorepage = () => {
                       value={formData.userName}
                       onChange={handleInputChange}
                       placeholder="Enter customer name"
-                      className="block w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500"
+                      className="block w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-600"
                     />
                   </div>
 
@@ -444,7 +479,7 @@ const BikeStorepage = () => {
                       value={formData.phoneNumber}
                       onChange={handleInputChange}
                       placeholder="Enter phone number"
-                      className="block w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500"
+                      className="block w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-600"
                     />
                   </div>
                 </div>
@@ -464,7 +499,7 @@ const BikeStorepage = () => {
                     value={formData.address}
                     onChange={handleInputChange}
                     placeholder="Enter customer address"
-                    className="block w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-500 resize-none"
+                    className="block w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-white text-gray-900 placeholder-gray-600 resize-none"
                   />
                 </div>
               </div>
@@ -472,7 +507,7 @@ const BikeStorepage = () => {
               {/* Service Timeline Section */}
               <div className="bg-orange-50 rounded-xl p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-orange-600" />
+                  <LucideClock className="h-5 w-5 text-orange-600" />
                   Service Timeline
                 </h2>
 
@@ -663,6 +698,17 @@ const BikeStorepage = () => {
           </div>
         </div>
       </div>
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleConfirmRemove}
+        title="Remove Service Item"
+        message="Are you sure you want to remove this service item? This action cannot be undone."
+        confirmText="Remove Item"
+        cancelText="Cancel"
+        type="danger"
+      />
     </ProtectedRoute>
   );
 };

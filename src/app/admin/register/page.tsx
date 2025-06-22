@@ -50,7 +50,7 @@ export default function AdminRegister() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push("/admin/bike-store");
+      router.replace("/admin/bike-store");
     }
   }, [user, loading, router]);
 
@@ -183,7 +183,7 @@ export default function AdminRegister() {
                       required
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ${
+                      className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900 placeholder-gray-600 ${
                         errors.firstName
                           ? "border-red-300 focus:ring-red-500"
                           : "border-gray-300"
@@ -217,7 +217,7 @@ export default function AdminRegister() {
                       required
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ${
+                      className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900 placeholder-gray-600 ${
                         errors.lastName
                           ? "border-red-300 focus:ring-red-500"
                           : "border-gray-300"
@@ -253,7 +253,7 @@ export default function AdminRegister() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900 placeholder-gray-600 ${
                       errors.email
                         ? "border-red-300 focus:ring-red-500"
                         : "border-gray-300"
@@ -286,7 +286,7 @@ export default function AdminRegister() {
                     required
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900 placeholder-gray-600 ${
                       errors.phone
                         ? "border-red-300 focus:ring-red-500"
                         : "border-gray-300"
@@ -318,7 +318,7 @@ export default function AdminRegister() {
                     required
                     value={formData.shopName}
                     onChange={handleInputChange}
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900 placeholder-gray-600 ${
                       errors.shopName
                         ? "border-red-300 focus:ring-red-500"
                         : "border-gray-300"
@@ -351,7 +351,7 @@ export default function AdminRegister() {
                     required
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ${
+                    className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900 placeholder-gray-600 ${
                       errors.password
                         ? "border-red-300 focus:ring-red-500"
                         : "border-gray-300"
@@ -395,7 +395,7 @@ export default function AdminRegister() {
                     required
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ${
+                    className={`block w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white text-gray-900 placeholder-gray-600 ${
                       errors.confirmPassword
                         ? "border-red-300 focus:ring-red-500"
                         : "border-gray-300"
@@ -490,7 +490,10 @@ export default function AdminRegister() {
 
           {/* Footer */}
           <div className="text-center text-sm text-gray-500">
-            <p>&copy; 2025 Mahadev Automobiles. All rights reserved.</p>
+            <p>
+              &copy; {new Date().getFullYear()} Mahadev Automobiles. All rights
+              reserved.
+            </p>
           </div>
         </div>
       )}
