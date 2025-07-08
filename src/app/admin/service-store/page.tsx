@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { useSearchParams } from "next/navigation";
 
 import { Plus, Trash2, BarChart3 } from "lucide-react";
 import Link from "next/link";
@@ -65,6 +66,7 @@ interface ServiceRecord {
 
 const ServicePage = () => {
   const { user, signOut } = useAuth();
+  const searchParams = useSearchParams();
   const [bikeNumber, setBikeNumber] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchResult, setSearchResult] = useState<ServiceRecord | null>(null);
@@ -108,6 +110,18 @@ const ServicePage = () => {
     "Digital Wallet",
     "Other",
   ];
+
+  // Handle URL parameters for pre-filling bike search
+  useEffect(() => {
+    const bikeParam = searchParams?.get("bike");
+    if (bikeParam) {
+      setBikeNumber(bikeParam);
+      // Auto-search when bike parameter is present
+      setTimeout(() => {
+        handleSearch();
+      }, 100);
+    }
+  }, [searchParams]);
 
   const sendSms = async (searchResult: ServiceRecord) => {
     await fetch("/api/send-notification", {
@@ -173,9 +187,23 @@ const ServicePage = () => {
           itemCost: number;
         }> = [];
         try {
-          parsedServiceItems = JSON.parse(record.serviceItems || "[]");
+          // Handle empty, null, or invalid serviceItems
+          if (
+            record.serviceItems &&
+            typeof record.serviceItems === "string" &&
+            record.serviceItems.trim() !== ""
+          ) {
+            parsedServiceItems = JSON.parse(record.serviceItems);
+          } else {
+            parsedServiceItems = [];
+          }
         } catch (e) {
-          console.error("Error parsing serviceItems:", e);
+          console.error(
+            "Error parsing serviceItems:",
+            e,
+            "Raw value:",
+            record.serviceItems
+          );
           parsedServiceItems = [];
         }
 
@@ -188,9 +216,23 @@ const ServicePage = () => {
           paymentMethod?: string;
         }> = [];
         try {
-          parsedPaymentHistory = JSON.parse(record.paymentHistory || "[]");
+          // Handle empty, null, or invalid paymentHistory
+          if (
+            record.paymentHistory &&
+            typeof record.paymentHistory === "string" &&
+            record.paymentHistory.trim() !== ""
+          ) {
+            parsedPaymentHistory = JSON.parse(record.paymentHistory);
+          } else {
+            parsedPaymentHistory = [];
+          }
         } catch (e) {
-          console.error("Error parsing paymentHistory:", e);
+          console.error(
+            "Error parsing paymentHistory:",
+            e,
+            "Raw value:",
+            record.paymentHistory
+          );
           parsedPaymentHistory = [];
         }
 
@@ -924,6 +966,13 @@ const ServicePage = () => {
                   >
                     <BarChart3 className="h-4 w-4" />
                     View Analytics
+                  </Link>
+                  <Link
+                    href="/admin/pending-payments"
+                    className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200"
+                  >
+                    <IndianRupee className="h-4 w-4" />
+                    Pending Payments
                   </Link>
                 </div>
               </div>
