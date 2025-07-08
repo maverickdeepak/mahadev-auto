@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useSearchParams } from "next/navigation";
 
@@ -64,7 +64,7 @@ interface ServiceRecord {
   }>;
 }
 
-const ServicePage = () => {
+const ServicePageContent = () => {
   const { user, signOut } = useAuth();
   const searchParams = useSearchParams();
   const [bikeNumber, setBikeNumber] = useState("");
@@ -1702,6 +1702,14 @@ const ServicePage = () => {
         />
       </div>
     </ProtectedRoute>
+  );
+};
+
+const ServicePage = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ServicePageContent />
+    </Suspense>
   );
 };
 
