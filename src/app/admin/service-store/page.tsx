@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+
 import { Plus, Trash2, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import ProtectedRoute from "../../components/ProtectedRoute";
@@ -108,6 +109,33 @@ const ServicePage = () => {
     "Other",
   ];
 
+  const sendSms = async (searchResult: ServiceRecord) => {
+    await fetch("/api/send-notification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone: searchResult.phone,
+        customerName: searchResult.customerName,
+        serviceType: searchResult.serviceType,
+        bikeNumber: searchResult.bikeNumber,
+        totalCost: searchResult.totalCost,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          toast.success("Notification sent to customer!");
+          console.log("Notification sent!", data);
+        } else {
+          toast.error("Notification failed: " + data.error);
+          console.error("Notification failed:", data.error);
+        }
+      })
+      .catch((error) => {
+        toast.error("Network or server error while sending notification.");
+        console.error("Network or server error:", error);
+      });
+  };
   const handleSearch = async () => {
     if (!bikeNumber.trim()) return;
 
@@ -324,9 +352,8 @@ const ServicePage = () => {
   };
 
   const handleConfirmDelivery = async () => {
-    if (pendingStatus === "Delivered") {
+    if (pendingStatus === "Delivered" && searchResult) {
       setIsUpdatingStatus(true);
-
       try {
         // Prepare update data
         const updateData: { serviceStatus: string; deliveryDate?: string } = {
@@ -337,9 +364,12 @@ const ServicePage = () => {
         const { error } = await supabase
           .from("bike_records")
           .update(updateData)
-          .eq("id", searchResult!.id);
+          .eq("id", searchResult.id);
 
         if (!error) {
+          // Send SMS notification when bike is delivered
+          await sendSms(searchResult);
+
           // Update local state
           setSearchResult((prev) => {
             if (!prev) return null;
@@ -367,7 +397,7 @@ const ServicePage = () => {
           // Update all records to reflect the change
           setAllRecords((prevRecords) =>
             prevRecords.map((record) =>
-              record.id === searchResult!.id
+              record.id === searchResult.id
                 ? {
                     ...record,
                     serviceStatus: "Delivered",
@@ -376,32 +406,6 @@ const ServicePage = () => {
                 : record
             )
           );
-
-          // Send SMS notification to customer
-          // try {
-          //   // Use mock SMS for testing (replace with sendDeliverySMS for production)
-          //   const smsResult = await sendMockSMS(
-          //     searchResult!.phone,
-          //     searchResult!.customerName,
-          //     searchResult!.bikeNumber,
-          //     searchResult!.serviceType
-          //   );
-
-          //   if (smsResult.success) {
-          //     toast.success(
-          //       `Service delivered! SMS notification sent to ${
-          //         searchResult!.customerName
-          //       }`
-          //     );
-          //   } else {
-          //     toast.success(
-          //       `Service delivered! (SMS failed: ${smsResult.message})`
-          //     );
-          //   }
-          // } catch (smsError) {
-          //   console.error("SMS sending error:", smsError);
-          //   toast.success(`Service delivered! (SMS notification failed)`);
-          // }
 
           toast.success(
             `Service delivered! Delivery date updated to ${formatDateTime(
@@ -591,6 +595,9 @@ const ServicePage = () => {
           .eq("id", searchResult.id);
 
         if (!error) {
+          // Send SMS notification when bike is delivered (even with pending payment)
+          await sendSms(searchResult);
+
           // Update local state
           setSearchResult((prev) => {
             if (!prev) return null;
@@ -727,7 +734,27 @@ const ServicePage = () => {
   };
 
   const updatePaymentStatus = async () => {
-    console.log("updatePaymentStatus called, searchResult:", searchResult?.id);
+    // notificationapi.init(notificationClientId, notificationClientSecret);
+
+    // notificationapi
+    //   .send({
+    //     type: "sms_notification",
+    //     to: {
+    //       number: `+91${searchResult!.phone}`,
+    //     },
+    //     sms: {
+    //       message: `Dear ${searchResult!.customerName}, your ${
+    //         searchResult!.serviceType
+    //       } service for bike ${
+    //         searchResult!.bikeNumber
+    //       } has been completed and is delivered. Thank you for choosing Mahadev Automobiles!`,
+    //     },
+    //   })
+    //   .then((res) => console.log("SMS notification sent successfully", res))
+    //   .catch((error) => {
+    //     console.error("Error sending SMS notification:", error);
+    //   });
+
     if (!searchResult) return;
 
     // Check if there's pending amount
