@@ -7,13 +7,49 @@ export async function POST(req: NextRequest) {
     const { phone, customerName, serviceType, bikeNumber, totalCost } =
       await req.json();
 
-    const notificationClientId = process.env.NOTIFICATIONAPI_CLIENT_ID!;
-    const notificationClientSecret = process.env.NOTIFICATIONAPI_CLIENT_SECRET!;
+    const notificationClientId = process.env.NOTIFICATIONAPI_CLIENT_ID;
+    const notificationClientSecret = process.env.NOTIFICATIONAPI_CLIENT_SECRET;
 
-    // It's generally good practice to initialize SDKs once.
-    // If notificationapi.init can be called multiple times safely (idempotent)
-    // or if this route is only hit once per server instance, it's fine.
-    // Otherwise, consider initializing it globally or caching the client.
+    // Check if environment variables are set
+    if (!notificationClientId || !notificationClientSecret) {
+      console.error("Missing environment variables:", {
+        hasClientId: !!notificationClientId,
+        hasClientSecret: !!notificationClientSecret,
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "SMS service configuration is missing. Please check environment variables.",
+        },
+        { status: 500 }
+      );
+    }
+
+    // Validate input parameters
+    if (
+      !phone ||
+      !customerName ||
+      !serviceType ||
+      !bikeNumber ||
+      totalCost === undefined
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Missing required parameters: phone, customerName, serviceType, bikeNumber, or totalCost",
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log(
+      "Initializing notification API with client ID:",
+      notificationClientId ? "SET" : "NOT SET"
+    );
+
+    // Initialize the notification API
     notificationapi.init(notificationClientId, notificationClientSecret);
 
     const response = await notificationapi.send({
@@ -60,11 +96,24 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: unknown) {
     console.error("Error sending SMS notification:", error);
+
+    // Log more details for debugging
+    if (error instanceof Error) {
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+
     // Ensure the error response is also serializable
     const errorMessage =
       error instanceof Error ? error.message : "An unknown error occurred";
+
     return NextResponse.json(
-      { success: false, error: errorMessage },
+      {
+        success: false,
+        error: errorMessage,
+        details: "Check server logs for more information",
+      },
       { status: 500 }
     );
   }
